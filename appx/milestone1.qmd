@@ -1,0 +1,64 @@
+---
+title: "Milestone 1"
+subtitle: "WNBA Performance Analysis"
+authors: "Cate Stacy and Karyna Steele"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    embed-resources: true
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE, 
+  warning = FALSE,
+  message = FALSE,
+  fig.height = 2.75, 
+  fig.width = 4.25,
+  fig.env='figure',
+  fig.pos = 'h',
+  fig.align = 'center')
+```
+
+# Project Description
+We are analyzing WNBA data from the 2025 season. We plan on exploring factors that contribute to the success of teams and individuals. We have access to play-by-play, team box score, and player box score data.
+
+# Research Questions
+
+### 1) What influences playing time for a WNBA player?
+
+### 2) What are the characteristics of winning teams? Do these characteristics align with the outcome of the championships?
+
+# Inspiration
+We were interested in pursuing a project surrounding sports given that it has many statistics. In recent years, women’s basketball has experienced a rapid rise in popularity. This has coincided with the growth of the WNBA, making it an exciting topic to analyze.
+
+# Data
+```{r}
+library(wehoop)
+library(tidyverse)
+
+wnba_pbp <- wehoop::load_wnba_pbp()
+wnba_team_box <- wehoop::load_wnba_team_box()
+wnba_player_box <- wehoop::load_wnba_player_box()
+```
+
+# Implamentation Plan
+1) Clean the data sets (together)
+a. Identify NA values and filter variables we need to answer our research questions
+2) EDA (individually)
+a.Make visualizations and identify variables that could be valuable for our analysis
+b. Summarize finding and narrow down research questions
+3) Research (individually)
+a. Conduct research about the data (ex. How it was collected)
+b. Do background research on topic
+4) Create preliminary findings presentation (together)
+a. Collaborate on presentation and present to classmates
+5) Create data story and present to class (together)
+a. Ensure that report is clean (hide warnings, ensure there are no long outputs)
+b. Revise according to feedback
+6) Clean up and organize GitHub repository (together)
+a. Add README file
+7) Create presentation slides and video (together)
+8) Evaluation and reflection (individually)
+
