@@ -2,4 +2,30 @@
 title: "Case Study"
 ---
 
-Your case study go here.
+-   Presents the driving question/purpose of analysis early on in the data story
+
+-   Begins with a brief overview describing the approach taken and main findings before diving into the full details
+
+-   Describes the data
+
+    -   Clean, small code chunks interspersed with text to help guide the reader
+
+    -   Simple clean visualizations effectively display trends in the data
+
+-   Rather than being lumped into a single section, the results and analysis are broken up into specific sections of the investigation
+
+-   Wraps up analysis in conclusion and explores meaning of findings
+
+-   Not very technical, avoids jargon, understandable by wide audience
+
+-   Visualizations are simple and have clear messages, but the report could have benefited from at least one more complex, eye-catching visualization
+
+-   Overall nice flow between text, visualizations, and code chunks
+
+    -   Good model for our report
+
+Citation: Robinson, D.
+(2016, August 9).
+Text analysis of Trump’s tweets confirms he writes only the (angrier) Android half.
+Variance Explained.
+http://varianceexplained.org/r/trump-tweets/

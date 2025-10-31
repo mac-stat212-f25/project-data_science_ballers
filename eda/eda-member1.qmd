@@ -1,5 +1,85 @@
 ---
-title: "Member 1 First Name & Last Name Initial"
+title: "Cate S."
 ---
 
 Your exploratory data analysis of the team datasets go here.
+
+```{r}
+library(wehoop)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+
+
+wnba_pbp <- wehoop::load_wnba_pbp()
+wnba_team_box <- wehoop::load_wnba_team_box()
+wnba_player_box <- wehoop::load_wnba_player_box()
+```
+
+```{r}
+top_scorers <- wnba_player_box %>%
+  group_by(athlete_display_name) %>%
+  summarize(avg_ppg = mean(points, na.rm = TRUE)) %>%
+  arrange(desc(avg_ppg))
+
+top_scorers
+```
+
+```{r}
+wnba_team_records <- wnba_team_box %>%
+  filter(team_name != "TEAM CLARK", team_name != "TEAM COLLIER") %>%
+  mutate(
+    win = ifelse(team_winner == TRUE, 1, 0),
+    loss = ifelse(team_winner == FALSE, 1, 0)
+  ) %>%
+  group_by(team_name) %>%
+  arrange(team_name, game_date) %>% 
+  mutate(
+    cumulative_wins = cumsum(win),
+    cumulative_losses = cumsum(loss),
+    record = paste0(cumulative_wins, "-", cumulative_losses),
+    win_pct = cumulative_wins/(cumulative_wins + cumulative_losses)
+  ) %>%
+  ungroup() %>%
+  mutate(team_color = paste0("#", team_color)) %>%
+  select(team_name, game_date, win, loss, cumulative_wins, cumulative_losses, win_pct, record, team_color, field_goal_pct) 
+
+team_colors <- wnba_team_box %>%
+  distinct(team_name, team_color) %>%
+  mutate(team_color = paste0("#", team_color)) %>%
+  deframe()
+
+df_labels <- wnba_team_records %>%
+  group_by(team_name) %>%
+  filter(game_date == max(game_date)) %>%
+  ungroup() 
+
+ggplot(wnba_team_records, aes(x = game_date, y = cumulative_wins, group = team_name, color = team_color)) +
+  geom_line(size = 1.2) +
+  scale_color_identity() + 
+  geom_text_repel(
+    data = df_labels,
+    aes(label = team_name),
+    nudge_x = 2, 
+    hjust = 0,
+    direction = "y",
+    segment.color = NA, 
+    size = 4.5,
+    fontface = "bold"
+  ) +
+  theme_minimal(base_size = 14) +
+  expand_limits(x = max(wnba_team_records$game_date) + 14) +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = as.Date("2025-09-11"), linetype = "dashed", color = "darkgrey")
+
+ggplot(wnba_team_records, aes(x = game_date, y = field_goal_pct)) +
+  geom_line() +
+  theme_minimal(base_size = 14) +
+  expand_limits(x = max(wnba_team_records$game_date) + 14) +
+  facet_wrap(~team_name) 
+  
+
+```
+
+
