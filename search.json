@@ -2,7 +2,7 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Project Title",
+    "title": "Analysis of the 2025 WNBA Season",
     "section": "",
     "text": "Your report goes here.\n\n\nCode\n# a test code chunk",
     "crumbs": [
@@ -12,12 +12,12 @@
   {
     "objectID": "eda/eda-member1.html",
     "href": "eda/eda-member1.html",
-    "title": "Member 1 First Name & Last Name Initial",
+    "title": "Cate S.",
     "section": "",
-    "text": "Your exploratory data analysis of the team datasets go here.",
+    "text": "Your exploratory data analysis of the team datasets go here.\n\n\nCode\nlibrary(wehoop)\nlibrary(tidyverse)\nlibrary(dplyr)\nlibrary(ggplot2)\nlibrary(ggrepel)\n\n\nwnba_pbp &lt;- wehoop::load_wnba_pbp()\nwnba_team_box &lt;- wehoop::load_wnba_team_box()\nwnba_player_box &lt;- wehoop::load_wnba_player_box()\n\n\n\n\nCode\ntop_scorers &lt;- wnba_player_box %&gt;%\n  group_by(athlete_display_name) %&gt;%\n  summarize(avg_ppg = mean(points, na.rm = TRUE)) %&gt;%\n  arrange(desc(avg_ppg))\n\ntop_scorers\n\n\n# A tibble: 185 × 2\n   athlete_display_name avg_ppg\n   &lt;chr&gt;                  &lt;dbl&gt;\n 1 A'ja Wilson             23.8\n 2 Napheesa Collier        22.6\n 3 Kelsey Mitchell         20.4\n 4 Kelsey Plum             19.4\n 5 Paige Bueckers          18.9\n 6 Dearica Hamby           18.4\n 7 Allisha Gray            18.2\n 8 Nneka Ogwumike          18.1\n 9 Breanna Stewart         17.9\n10 Sabrina Ionescu         17.9\n# ℹ 175 more rows\n\n\n\n\nCode\nwnba_team_records &lt;- wnba_team_box %&gt;%\n  filter(team_name != \"TEAM CLARK\", team_name != \"TEAM COLLIER\") %&gt;%\n  mutate(\n    win = ifelse(team_winner == TRUE, 1, 0),\n    loss = ifelse(team_winner == FALSE, 1, 0)\n  ) %&gt;%\n  group_by(team_name) %&gt;%\n  arrange(team_name, game_date) %&gt;% \n  mutate(\n    cumulative_wins = cumsum(win),\n    cumulative_losses = cumsum(loss),\n    record = paste0(cumulative_wins, \"-\", cumulative_losses),\n    win_pct = cumulative_wins/(cumulative_wins + cumulative_losses)\n  ) %&gt;%\n  ungroup() %&gt;%\n  mutate(team_color = paste0(\"#\", team_color)) %&gt;%\n  select(team_name, game_date, win, loss, cumulative_wins, cumulative_losses, win_pct, record, team_color, field_goal_pct) \n\nteam_colors &lt;- wnba_team_box %&gt;%\n  distinct(team_name, team_color) %&gt;%\n  mutate(team_color = paste0(\"#\", team_color)) %&gt;%\n  deframe()\n\ndf_labels &lt;- wnba_team_records %&gt;%\n  group_by(team_name) %&gt;%\n  filter(game_date == max(game_date)) %&gt;%\n  ungroup() \n\nggplot(wnba_team_records, aes(x = game_date, y = cumulative_wins, group = team_name, color = team_color)) +\n  geom_line(size = 1.2) +\n  scale_color_identity() + \n  geom_text_repel(\n    data = df_labels,\n    aes(label = team_name),\n    nudge_x = 2, \n    hjust = 0,\n    direction = \"y\",\n    segment.color = NA, \n    size = 4.5,\n    fontface = \"bold\"\n  ) +\n  theme_minimal(base_size = 14) +\n  expand_limits(x = max(wnba_team_records$game_date) + 14) +\n  theme(legend.position = \"none\") +\n  geom_vline(xintercept = as.Date(\"2025-09-11\"), linetype = \"dashed\", color = \"darkgrey\")\n\n\n\n\n\n\n\n\n\nCode\nggplot(wnba_team_records, aes(x = game_date, y = field_goal_pct)) +\n  geom_line() +\n  theme_minimal(base_size = 14) +\n  expand_limits(x = max(wnba_team_records$game_date) + 14) +\n  facet_wrap(~team_name)",
     "crumbs": [
       "EDA",
-      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Member 1 First Name & Last Name Initial</span>"
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Cate S.</span>"
     ]
   },
   {
@@ -47,7 +47,73 @@
     "href": "appx/proposal.html",
     "title": "Appendix A — Proposal",
     "section": "",
-    "text": "Your proposal go here.",
+    "text": "Title: Analysis of the 2025 WNBA Season",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Proposal</span>"
+    ]
+  },
+  {
+    "objectID": "appx/proposal.html#authors-cate-stacy-and-karyna-steele",
+    "href": "appx/proposal.html#authors-cate-stacy-and-karyna-steele",
+    "title": "Appendix A — Proposal",
+    "section": "Authors: Cate Stacy and Karyna Steele",
+    "text": "Authors: Cate Stacy and Karyna Steele",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Proposal</span>"
+    ]
+  },
+  {
+    "objectID": "appx/proposal.html#project-description",
+    "href": "appx/proposal.html#project-description",
+    "title": "Appendix A — Proposal",
+    "section": "Project Description",
+    "text": "Project Description\nWe are analyzing Women’s National Basketball Association (WNBA) data from the 2025 season. We have access to play-by-play, team box score, and player box score data. We plan on exploring factors that contribute to the success of teams and individuals.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Proposal</span>"
+    ]
+  },
+  {
+    "objectID": "appx/proposal.html#research-questions",
+    "href": "appx/proposal.html#research-questions",
+    "title": "Appendix A — Proposal",
+    "section": "Research Questions",
+    "text": "Research Questions\n\nWhat factors, such as points scored, turnovers, or fouls, influence playing time for a WNBA player?\nWhat are the characteristics of winning teams? Do these characteristics align with the outcome of the championships?",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Proposal</span>"
+    ]
+  },
+  {
+    "objectID": "appx/proposal.html#inspiration",
+    "href": "appx/proposal.html#inspiration",
+    "title": "Appendix A — Proposal",
+    "section": "Inspiration",
+    "text": "Inspiration\nAs student-athletes, we were interested in pursuing a project surrounding women’s sports. In recent years, women’s basketball has experienced a rapid rise in popularity. This has coincided with the growth of the WNBA, making it an exciting topic to analyze.",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Proposal</span>"
+    ]
+  },
+  {
+    "objectID": "appx/proposal.html#data",
+    "href": "appx/proposal.html#data",
+    "title": "Appendix A — Proposal",
+    "section": "Data",
+    "text": "Data\n\n\nCode\nlibrary(wehoop)\nlibrary(tidyverse)\n\nwnba_pbp &lt;- wehoop::load_wnba_pbp()\nwnba_team_box &lt;- wehoop::load_wnba_team_box()\nwnba_player_box &lt;- wehoop::load_wnba_player_box()",
+    "crumbs": [
+      "Appendices",
+      "<span class='chapter-number'>A</span>  <span class='chapter-title'>Proposal</span>"
+    ]
+  },
+  {
+    "objectID": "appx/proposal.html#implementation-plan",
+    "href": "appx/proposal.html#implementation-plan",
+    "title": "Appendix A — Proposal",
+    "section": "Implementation Plan",
+    "text": "Implementation Plan\n\nClean the data sets (together)\n\n\n\nIdentify NA values and filter variables we need to answer our research questions\n\n\n\nEDA (individually) a.Make visualizations and identify variables that could be valuable for our analysis\n\n\n\nSummarize finding and narrow down research questions\n\n\n\nResearch (individually)\n\n\n\nConduct research about the data (ex. How it was collected)\nDo background research on topic\n\n\n\nCreate preliminary findings presentation (together)\n\n\n\nCollaborate on presentation and present to classmates\n\n\n\nCreate data story and present to class (together)\n\n\n\nEnsure that report is clean (hide warnings, ensure there are no long outputs)\nRevise according to feedback\n\n\n\nClean up and organize GitHub repository (together)\n\n\n\nAdd README file\n\n\n\nCreate presentation slides and video (together)\nEvaluation and reflection (individually)",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>A</span>  <span class='chapter-title'>Proposal</span>"
@@ -58,7 +124,7 @@
     "href": "appx/case-study.html",
     "title": "Appendix B — Case Study",
     "section": "",
-    "text": "Your case study go here.",
+    "text": "Presents the driving question/purpose of analysis early on in the data story\nBegins with a brief overview describing the approach taken and main findings before diving into the full details\nDescribes the data\n\nClean, small code chunks interspersed with text to help guide the reader\nSimple clean visualizations effectively display trends in the data\n\nRather than being lumped into a single section, the results and analysis are broken up into specific sections of the investigation\nWraps up analysis in conclusion and explores meaning of findings\nNot very technical, avoids jargon, understandable by wide audience\nVisualizations are simple and have clear messages, but the report could have benefited from at least one more complex, eye-catching visualization\nOverall nice flow between text, visualizations, and code chunks\n\nGood model for our report\n\n\nCitation: Robinson, D. (2016, August 9). Text analysis of Trump’s tweets confirms he writes only the (angrier) Android half. Variance Explained. http://varianceexplained.org/r/trump-tweets/",
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>B</span>  <span class='chapter-title'>Case Study</span>"
@@ -95,17 +161,6 @@
     "crumbs": [
       "Appendices",
       "<span class='chapter-number'>E</span>  <span class='chapter-title'>Member 3 First Name & Last Name Initial</span>"
-    ]
-  },
-  {
-    "objectID": "appx/milestone1.html",
-    "href": "appx/milestone1.html",
-    "title": "Appendix F — Milestone 1",
-    "section": "",
-    "text": "Project Description\nWe are analyzing WNBA data from the 2025 season. We plan on exploring factors that contribute to the success of teams and individuals. We have access to play-by-play, team box score, and player box score data.\n\n\nResearch Questions\n\n1) What influences playing time for a WNBA player?\n\n\n2) What are the characteristics of winning teams? Do these characteristics align with the outcome of the championships?\n\n\n\nInspiration\nWe were interested in pursuing a project surrounding sports given that it has many statistics. In recent years, women’s basketball has experienced a rapid rise in popularity. This has coincided with the growth of the WNBA, making it an exciting topic to analyze.\n\n\nData\n\n\nCode\nlibrary(wehoop)\nlibrary(tidyverse)\n\nwnba_pbp &lt;- wehoop::load_wnba_pbp()\nwnba_team_box &lt;- wehoop::load_wnba_team_box()\nwnba_player_box &lt;- wehoop::load_wnba_player_box()\n\n\n\n\nImplamentation Plan\n\nClean the data sets (together)\n\n\nIdentify NA values and filter variables we need to answer our research questions\n\n\nEDA (individually) a.Make visualizations and identify variables that could be valuable for our analysis\n\n\nSummarize finding and narrow down research questions\n\n\nResearch (individually)\n\n\nConduct research about the data (ex. How it was collected)\nDo background research on topic\n\n\nCreate preliminary findings presentation (together)\n\n\nCollaborate on presentation and present to classmates\n\n\nCreate data story and present to class (together)\n\n\nEnsure that report is clean (hide warnings, ensure there are no long outputs)\nRevise according to feedback\n\n\nClean up and organize GitHub repository (together)\n\n\nAdd README file\n\n\nCreate presentation slides and video (together)\nEvaluation and reflection (individually)",
-    "crumbs": [
-      "Appendices",
-      "<span class='chapter-number'>F</span>  <span class='chapter-title'>Milestone 1</span>"
     ]
   }
 ]
