@@ -414,11 +414,19 @@ cookieconsent.run({
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="99">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#player-dataset" id="toc-player-dataset" class="nav-link active" data-scroll-target="#player-dataset">Player Dataset</a></li>
+  <li><a href="#team-dataset" id="toc-team-dataset" class="nav-link" data-scroll-target="#team-dataset">Team Dataset</a></li>
+  <li><a href="#play-by-play-dataset" id="toc-play-by-play-dataset" class="nav-link" data-scroll-target="#play-by-play-dataset">Play-By-Play Dataset</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
-<main class="content column-page-right" id="quarto-document-content">
+<main class="content column-body" id="quarto-document-content">
 
 
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../eda/eda-member1.html">EDA</a></li><li class="breadcrumb-item"><a href="../eda/eda-member1.html"><span class="chapter-title">Cate S.</span></a></li></ol></nav>
@@ -428,7 +436,7 @@ cookieconsent.run({
 
 
 
-<div class="quarto-title-meta column-page-right">
+<div class="quarto-title-meta column-body">
 
     
   
@@ -440,7 +448,6 @@ cookieconsent.run({
 </header>
 
 
-<p>Your exploratory data analysis of the team datasets go here.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -450,115 +457,348 @@ cookieconsent.run({
 <span id="cb1-4"><a href="#cb1-4"></a><span class="fu">library</span>(ggplot2)</span>
 <span id="cb1-5"><a href="#cb1-5"></a><span class="fu">library</span>(ggrepel)</span>
 <span id="cb1-6"><a href="#cb1-6"></a></span>
-<span id="cb1-7"><a href="#cb1-7"></a></span>
-<span id="cb1-8"><a href="#cb1-8"></a>wnba_pbp <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_pbp</span>()</span>
-<span id="cb1-9"><a href="#cb1-9"></a>wnba_team_box <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_team_box</span>()</span>
-<span id="cb1-10"><a href="#cb1-10"></a>wnba_player_box <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_player_box</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-7"><a href="#cb1-7"></a>wnba_pbp <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_pbp</span>()</span>
+<span id="cb1-8"><a href="#cb1-8"></a>wnba_team_box <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_team_box</span>()</span>
+<span id="cb1-9"><a href="#cb1-9"></a>wnba_player_box <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_player_box</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
+<section id="player-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="player-dataset">Player Dataset</h3>
+<p>dimensions:</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a>top_scorers <span class="ot">&lt;-</span> wnba_player_box <span class="sc">%&gt;%</span></span>
-<span id="cb2-2"><a href="#cb2-2"></a>  <span class="fu">group_by</span>(athlete_display_name) <span class="sc">%&gt;%</span></span>
-<span id="cb2-3"><a href="#cb2-3"></a>  <span class="fu">summarize</span>(<span class="at">avg_ppg =</span> <span class="fu">mean</span>(points, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb2-4"><a href="#cb2-4"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_ppg))</span>
-<span id="cb2-5"><a href="#cb2-5"></a></span>
-<span id="cb2-6"><a href="#cb2-6"></a>top_scorers</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="co"># get dimensions</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="fu">dim</span>(wnba_player_box)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 185 × 2
-   athlete_display_name avg_ppg
-   &lt;chr&gt;                  &lt;dbl&gt;
- 1 A'ja Wilson             23.8
- 2 Napheesa Collier        22.6
- 3 Kelsey Mitchell         20.4
- 4 Kelsey Plum             19.4
- 5 Paige Bueckers          18.9
- 6 Dearica Hamby           18.4
- 7 Allisha Gray            18.2
- 8 Nneka Ogwumike          18.1
- 9 Breanna Stewart         17.9
-10 Sabrina Ionescu         17.9
-# ℹ 175 more rows</code></pre>
+<pre><code>[1] 7140   57</code></pre>
 </div>
+</div>
+<p>First, I looked at the league’s best players. I made a new dataset with the average stats for each player and ordered it by the most points per game.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="co"># find the league's best players</span></span>
+<span id="cb4-2"><a href="#cb4-2"></a>top_players <span class="ot">&lt;-</span> wnba_player_box <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3"></a>  <span class="fu">group_by</span>(athlete_display_name) <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb4-5"><a href="#cb4-5"></a>    <span class="at">avg_ppg =</span> <span class="fu">mean</span>(points, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb4-6"><a href="#cb4-6"></a>    <span class="at">avg_blocks =</span> <span class="fu">mean</span>(blocks, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb4-7"><a href="#cb4-7"></a>    <span class="at">avg_rebounds =</span> <span class="fu">mean</span>((offensive_rebounds <span class="sc">+</span> defensive_rebounds), <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb4-8"><a href="#cb4-8"></a>    <span class="at">avg_assists =</span> <span class="fu">mean</span>(assists, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb4-9"><a href="#cb4-9"></a>    <span class="at">avg_steals =</span> <span class="fu">mean</span>(steals, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb4-10"><a href="#cb4-10"></a>    )</span>
+<span id="cb4-11"><a href="#cb4-11"></a></span>
+<span id="cb4-12"><a href="#cb4-12"></a>top_players <span class="sc">%&gt;%</span></span>
+<span id="cb4-13"><a href="#cb4-13"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_ppg)) <span class="sc">%&gt;%</span></span>
+<span id="cb4-14"><a href="#cb4-14"></a>  <span class="fu">head</span>(<span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 10 × 6
+   athlete_display_name avg_ppg avg_blocks avg_rebounds avg_assists avg_steals
+   &lt;chr&gt;                  &lt;dbl&gt;      &lt;dbl&gt;        &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;
+ 1 A'ja Wilson             23.8     2.30           9.98        3.09      1.70 
+ 2 Napheesa Collier        22.6     1.4            7.32        3.02      1.58 
+ 3 Kelsey Mitchell         20.4     0.167          1.70        3.31      0.907
+ 4 Kelsey Plum             19.4     0.0909         3.11        5.68      1.23 
+ 5 Paige Bueckers          18.9     0.486          3.89        5.46      1.54 
+ 6 Dearica Hamby           18.4     0.477          7.93        3.27      1.57 
+ 7 Allisha Gray            18.2     0.370          5.39        3.39      1.04 
+ 8 Nneka Ogwumike          18.1     0.375          7.15        2.29      1.08 
+ 9 Breanna Stewart         17.9     1.29           6.4         3.4       1.31 
+10 Sabrina Ionescu         17.9     0.452          4.83        5.64      1.17 </code></pre>
+</div>
+</div>
+<p>A’ja Wilson led the league in scoring. In addition to playing for the championship team, the Las Vegas Aces, she was also named MVP.</p>
+</section>
+<section id="team-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="team-dataset">Team Dataset</h3>
+<p>dimensions:</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1"></a><span class="co"># get dimensions</span></span>
+<span id="cb6-2"><a href="#cb6-2"></a><span class="fu">dim</span>(wnba_team_box)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 624  57</code></pre>
+</div>
+</div>
+<p>I made running counts of each teams wins and losses so that their records could be determined at any point in the season. I made a visualization showing the cumulative wins for each team over the course of the season.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="co"># determine records for each team</span></span>
+<span id="cb8-2"><a href="#cb8-2"></a>wnba_team_records <span class="ot">&lt;-</span> wnba_team_box <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3"></a>  <span class="fu">filter</span>(team_name <span class="sc">!=</span> <span class="st">"TEAM CLARK"</span>, team_name <span class="sc">!=</span> <span class="st">"TEAM COLLIER"</span>) <span class="sc">%&gt;%</span> <span class="co"># remove All Star teams</span></span>
+<span id="cb8-4"><a href="#cb8-4"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb8-5"><a href="#cb8-5"></a>    <span class="at">win =</span> <span class="fu">ifelse</span>(team_winner <span class="sc">==</span> <span class="cn">TRUE</span>, <span class="dv">1</span>, <span class="dv">0</span>),</span>
+<span id="cb8-6"><a href="#cb8-6"></a>    <span class="at">loss =</span> <span class="fu">ifelse</span>(team_winner <span class="sc">==</span> <span class="cn">FALSE</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb8-7"><a href="#cb8-7"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb8-8"><a href="#cb8-8"></a>  <span class="fu">group_by</span>(team_name) <span class="sc">%&gt;%</span></span>
+<span id="cb8-9"><a href="#cb8-9"></a>  <span class="fu">arrange</span>(team_name, game_date) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-10"><a href="#cb8-10"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb8-11"><a href="#cb8-11"></a>    <span class="at">cumulative_wins =</span> <span class="fu">cumsum</span>(win),</span>
+<span id="cb8-12"><a href="#cb8-12"></a>    <span class="at">cumulative_losses =</span> <span class="fu">cumsum</span>(loss),</span>
+<span id="cb8-13"><a href="#cb8-13"></a>    <span class="at">record =</span> <span class="fu">paste0</span>(cumulative_wins, <span class="st">"-"</span>, cumulative_losses),</span>
+<span id="cb8-14"><a href="#cb8-14"></a>    <span class="at">win_pct =</span> cumulative_wins<span class="sc">/</span>(cumulative_wins <span class="sc">+</span> cumulative_losses)</span>
+<span id="cb8-15"><a href="#cb8-15"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb8-16"><a href="#cb8-16"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb8-17"><a href="#cb8-17"></a>  <span class="fu">mutate</span>(<span class="at">team_color =</span> <span class="fu">paste0</span>(<span class="st">"#"</span>, team_color))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a>wnba_team_records <span class="ot">&lt;-</span> wnba_team_box <span class="sc">%&gt;%</span></span>
-<span id="cb4-2"><a href="#cb4-2"></a>  <span class="fu">filter</span>(team_name <span class="sc">!=</span> <span class="st">"TEAM CLARK"</span>, team_name <span class="sc">!=</span> <span class="st">"TEAM COLLIER"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb4-3"><a href="#cb4-3"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb4-4"><a href="#cb4-4"></a>    <span class="at">win =</span> <span class="fu">ifelse</span>(team_winner <span class="sc">==</span> <span class="cn">TRUE</span>, <span class="dv">1</span>, <span class="dv">0</span>),</span>
-<span id="cb4-5"><a href="#cb4-5"></a>    <span class="at">loss =</span> <span class="fu">ifelse</span>(team_winner <span class="sc">==</span> <span class="cn">FALSE</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb4-6"><a href="#cb4-6"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb4-7"><a href="#cb4-7"></a>  <span class="fu">group_by</span>(team_name) <span class="sc">%&gt;%</span></span>
-<span id="cb4-8"><a href="#cb4-8"></a>  <span class="fu">arrange</span>(team_name, game_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb4-9"><a href="#cb4-9"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb4-10"><a href="#cb4-10"></a>    <span class="at">cumulative_wins =</span> <span class="fu">cumsum</span>(win),</span>
-<span id="cb4-11"><a href="#cb4-11"></a>    <span class="at">cumulative_losses =</span> <span class="fu">cumsum</span>(loss),</span>
-<span id="cb4-12"><a href="#cb4-12"></a>    <span class="at">record =</span> <span class="fu">paste0</span>(cumulative_wins, <span class="st">"-"</span>, cumulative_losses),</span>
-<span id="cb4-13"><a href="#cb4-13"></a>    <span class="at">win_pct =</span> cumulative_wins<span class="sc">/</span>(cumulative_wins <span class="sc">+</span> cumulative_losses)</span>
-<span id="cb4-14"><a href="#cb4-14"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb4-15"><a href="#cb4-15"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb4-16"><a href="#cb4-16"></a>  <span class="fu">mutate</span>(<span class="at">team_color =</span> <span class="fu">paste0</span>(<span class="st">"#"</span>, team_color)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-17"><a href="#cb4-17"></a>  <span class="fu">select</span>(team_name, game_date, win, loss, cumulative_wins, cumulative_losses, win_pct, record, team_color, field_goal_pct) </span>
-<span id="cb4-18"><a href="#cb4-18"></a></span>
-<span id="cb4-19"><a href="#cb4-19"></a>team_colors <span class="ot">&lt;-</span> wnba_team_box <span class="sc">%&gt;%</span></span>
-<span id="cb4-20"><a href="#cb4-20"></a>  <span class="fu">distinct</span>(team_name, team_color) <span class="sc">%&gt;%</span></span>
-<span id="cb4-21"><a href="#cb4-21"></a>  <span class="fu">mutate</span>(<span class="at">team_color =</span> <span class="fu">paste0</span>(<span class="st">"#"</span>, team_color)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-22"><a href="#cb4-22"></a>  <span class="fu">deframe</span>()</span>
-<span id="cb4-23"><a href="#cb4-23"></a></span>
-<span id="cb4-24"><a href="#cb4-24"></a>df_labels <span class="ot">&lt;-</span> wnba_team_records <span class="sc">%&gt;%</span></span>
-<span id="cb4-25"><a href="#cb4-25"></a>  <span class="fu">group_by</span>(team_name) <span class="sc">%&gt;%</span></span>
-<span id="cb4-26"><a href="#cb4-26"></a>  <span class="fu">filter</span>(game_date <span class="sc">==</span> <span class="fu">max</span>(game_date)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-27"><a href="#cb4-27"></a>  <span class="fu">ungroup</span>() </span>
-<span id="cb4-28"><a href="#cb4-28"></a></span>
-<span id="cb4-29"><a href="#cb4-29"></a><span class="fu">ggplot</span>(wnba_team_records, <span class="fu">aes</span>(<span class="at">x =</span> game_date, <span class="at">y =</span> cumulative_wins, <span class="at">group =</span> team_name, <span class="at">color =</span> team_color)) <span class="sc">+</span></span>
-<span id="cb4-30"><a href="#cb4-30"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
-<span id="cb4-31"><a href="#cb4-31"></a>  <span class="fu">scale_color_identity</span>() <span class="sc">+</span> </span>
-<span id="cb4-32"><a href="#cb4-32"></a>  <span class="fu">geom_text_repel</span>(</span>
-<span id="cb4-33"><a href="#cb4-33"></a>    <span class="at">data =</span> df_labels,</span>
-<span id="cb4-34"><a href="#cb4-34"></a>    <span class="fu">aes</span>(<span class="at">label =</span> team_name),</span>
-<span id="cb4-35"><a href="#cb4-35"></a>    <span class="at">nudge_x =</span> <span class="dv">2</span>, </span>
-<span id="cb4-36"><a href="#cb4-36"></a>    <span class="at">hjust =</span> <span class="dv">0</span>,</span>
-<span id="cb4-37"><a href="#cb4-37"></a>    <span class="at">direction =</span> <span class="st">"y"</span>,</span>
-<span id="cb4-38"><a href="#cb4-38"></a>    <span class="at">segment.color =</span> <span class="cn">NA</span>, </span>
-<span id="cb4-39"><a href="#cb4-39"></a>    <span class="at">size =</span> <span class="fl">4.5</span>,</span>
-<span id="cb4-40"><a href="#cb4-40"></a>    <span class="at">fontface =</span> <span class="st">"bold"</span></span>
-<span id="cb4-41"><a href="#cb4-41"></a>  ) <span class="sc">+</span></span>
-<span id="cb4-42"><a href="#cb4-42"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>) <span class="sc">+</span></span>
-<span id="cb4-43"><a href="#cb4-43"></a>  <span class="fu">expand_limits</span>(<span class="at">x =</span> <span class="fu">max</span>(wnba_team_records<span class="sc">$</span>game_date) <span class="sc">+</span> <span class="dv">14</span>) <span class="sc">+</span></span>
-<span id="cb4-44"><a href="#cb4-44"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
-<span id="cb4-45"><a href="#cb4-45"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">as.Date</span>(<span class="st">"2025-09-11"</span>), <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"darkgrey"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a><span class="co"># visualize records</span></span>
+<span id="cb9-2"><a href="#cb9-2"></a><span class="fu">ggplot</span>(wnba_team_records, <span class="fu">aes</span>(<span class="at">x =</span> game_date, <span class="at">y =</span> cumulative_wins, <span class="at">color =</span> team_name)) <span class="sc">+</span></span>
+<span id="cb9-3"><a href="#cb9-3"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">as.Date</span>(<span class="st">"2025-09-11"</span>), <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb9-5"><a href="#cb9-5"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="eda-member1_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="eda-member1_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
+</div>
+</div>
+<p>The black line represents the end of the regular season and beginning of the playoffs. The lines for each team end at varying points, depending on when they were eliminated. The Minnesota Lynx had the best record throughout the regular season, but then they were eliminated in the semi-finals. The Aces struggled in the first half of the season but then went on a massive winning streak which took them to the championships.</p>
+<p>Next, I found the teams that led the league in various shot percentages.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a><span class="co"># determine teams with the best avg shot percentages</span></span>
+<span id="cb10-2"><a href="#cb10-2"></a>shot_percentages <span class="ot">&lt;-</span> wnba_team_records <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3"></a>  <span class="fu">select</span>(field_goal_pct, free_throw_pct, three_point_field_goal_pct, team_name) <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4"></a>  <span class="fu">group_by</span>(team_name) <span class="sc">%&gt;%</span></span>
+<span id="cb10-5"><a href="#cb10-5"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb10-6"><a href="#cb10-6"></a>    <span class="at">avg_field_goal =</span> <span class="fu">mean</span>(field_goal_pct),</span>
+<span id="cb10-7"><a href="#cb10-7"></a>    <span class="at">avg_free_throw =</span> <span class="fu">mean</span>(free_throw_pct),</span>
+<span id="cb10-8"><a href="#cb10-8"></a>    <span class="at">avg_three =</span> <span class="fu">mean</span>(three_point_field_goal_pct),</span>
+<span id="cb10-9"><a href="#cb10-9"></a>  )</span>
+<span id="cb10-10"><a href="#cb10-10"></a></span>
+<span id="cb10-11"><a href="#cb10-11"></a>shot_percentages <span class="sc">%&gt;%</span></span>
+<span id="cb10-12"><a href="#cb10-12"></a>  <span class="fu">select</span>(team_name, avg_field_goal) <span class="sc">%&gt;%</span></span>
+<span id="cb10-13"><a href="#cb10-13"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_field_goal)) <span class="sc">%&gt;%</span></span>
+<span id="cb10-14"><a href="#cb10-14"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  team_name avg_field_goal
+  &lt;chr&gt;              &lt;dbl&gt;
+1 Lynx                46.8</code></pre>
 </div>
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="fu">ggplot</span>(wnba_team_records, <span class="fu">aes</span>(<span class="at">x =</span> game_date, <span class="at">y =</span> field_goal_pct)) <span class="sc">+</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
-<span id="cb5-3"><a href="#cb5-3"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>) <span class="sc">+</span></span>
-<span id="cb5-4"><a href="#cb5-4"></a>  <span class="fu">expand_limits</span>(<span class="at">x =</span> <span class="fu">max</span>(wnba_team_records<span class="sc">$</span>game_date) <span class="sc">+</span> <span class="dv">14</span>) <span class="sc">+</span></span>
-<span id="cb5-5"><a href="#cb5-5"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>team_name) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>shot_percentages <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a>  <span class="fu">select</span>(team_name, avg_free_throw) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_free_throw)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  team_name avg_free_throw
+  &lt;chr&gt;              &lt;dbl&gt;
+1 Liberty             82.5</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>shot_percentages <span class="sc">%&gt;%</span></span>
+<span id="cb14-2"><a href="#cb14-2"></a>  <span class="fu">select</span>(team_name, avg_three) <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_three)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  team_name avg_three
+  &lt;chr&gt;         &lt;dbl&gt;
+1 Lynx           36.7</code></pre>
+</div>
+</div>
+<p>These shooting stats support the finding from the previous plot that the Lynx had the best regular season record.</p>
+<p>As a way of comparing how each team typically matched up against their opponents, I calculated the margins for various stats. I then took the averages and displayed the teams with the highest field goal, free throw, and three pointer margins and lowest turnover and foul margins.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="co"># determine game margins for different performance stats</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a>margins <span class="ot">&lt;-</span> wnba_team_records <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3"></a>  <span class="fu">group_by</span>(game_id) <span class="sc">%&gt;%</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb16-5"><a href="#cb16-5"></a>    <span class="at">field_margin =</span> field_goals_made <span class="sc">-</span> <span class="fu">rev</span>(field_goals_made),</span>
+<span id="cb16-6"><a href="#cb16-6"></a>    <span class="at">free_margin =</span> free_throws_made <span class="sc">-</span> <span class="fu">rev</span>(free_throws_made),</span>
+<span id="cb16-7"><a href="#cb16-7"></a>    <span class="at">three_margin =</span> three_point_field_goals_made <span class="sc">-</span> <span class="fu">rev</span>(three_point_field_goals_made),</span>
+<span id="cb16-8"><a href="#cb16-8"></a>    <span class="at">turnover_margin =</span> turnovers <span class="sc">-</span> <span class="fu">rev</span>(turnovers),</span>
+<span id="cb16-9"><a href="#cb16-9"></a>    <span class="at">foul_margin =</span> fouls <span class="sc">-</span> <span class="fu">rev</span>(fouls)</span>
+<span id="cb16-10"><a href="#cb16-10"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb16-11"><a href="#cb16-11"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb16-12"><a href="#cb16-12"></a>  <span class="fu">select</span>(game_id, team_name, field_margin, free_margin, three_margin, turnover_margin, foul_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb16-13"><a href="#cb16-13"></a>  <span class="fu">arrange</span>(game_id) </span>
+<span id="cb16-14"><a href="#cb16-14"></a></span>
+<span id="cb16-15"><a href="#cb16-15"></a><span class="co"># calculate average margins by team</span></span>
+<span id="cb16-16"><a href="#cb16-16"></a>margin_avgs <span class="ot">&lt;-</span> margins <span class="sc">%&gt;%</span></span>
+<span id="cb16-17"><a href="#cb16-17"></a>  <span class="fu">group_by</span>(team_name) <span class="sc">%&gt;%</span></span>
+<span id="cb16-18"><a href="#cb16-18"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb16-19"><a href="#cb16-19"></a>    <span class="at">avg_field_margin =</span> <span class="fu">mean</span>(field_margin),</span>
+<span id="cb16-20"><a href="#cb16-20"></a>    <span class="at">avg_free_margin =</span> <span class="fu">mean</span>(free_margin),</span>
+<span id="cb16-21"><a href="#cb16-21"></a>    <span class="at">avg_three_margin =</span> <span class="fu">mean</span>(three_margin),</span>
+<span id="cb16-22"><a href="#cb16-22"></a>    <span class="at">avg_turnover_margin =</span> <span class="fu">mean</span>(turnover_margin),</span>
+<span id="cb16-23"><a href="#cb16-23"></a>    <span class="at">avg_foul_margin =</span> <span class="fu">mean</span>(foul_margin)</span>
+<span id="cb16-24"><a href="#cb16-24"></a>  ) </span>
+<span id="cb16-25"><a href="#cb16-25"></a></span>
+<span id="cb16-26"><a href="#cb16-26"></a>margin_avgs_pivoted <span class="ot">&lt;-</span> margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb16-27"><a href="#cb16-27"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb16-28"><a href="#cb16-28"></a>    <span class="at">cols =</span> <span class="fu">c</span>(avg_field_margin, avg_free_margin, avg_three_margin, avg_turnover_margin, avg_foul_margin),</span>
+<span id="cb16-29"><a href="#cb16-29"></a>    <span class="at">names_to =</span> <span class="st">"margin_type"</span>,</span>
+<span id="cb16-30"><a href="#cb16-30"></a>    <span class="at">values_to =</span> <span class="st">"margin_value"</span></span>
+<span id="cb16-31"><a href="#cb16-31"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb16-32"><a href="#cb16-32"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb16-33"><a href="#cb16-33"></a>    <span class="at">margin_type =</span> <span class="fu">fct_relevel</span>(margin_type, <span class="st">"avg_field_margin"</span>, <span class="st">"avg_free_margin"</span>, <span class="st">"avg_three_margin"</span>, <span class="st">"avg_turnover_margin"</span>, <span class="st">"avg_foul_margin"</span>)</span>
+<span id="cb16-34"><a href="#cb16-34"></a>  )</span>
+<span id="cb16-35"><a href="#cb16-35"></a></span>
+<span id="cb16-36"><a href="#cb16-36"></a>margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb16-37"><a href="#cb16-37"></a>  <span class="fu">select</span>(team_name, avg_field_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb16-38"><a href="#cb16-38"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_field_margin)) <span class="sc">%&gt;%</span></span>
+<span id="cb16-39"><a href="#cb16-39"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  team_name avg_field_margin
+  &lt;chr&gt;                &lt;dbl&gt;
+1 Lynx                  3.59</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a>margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2"></a>  <span class="fu">select</span>(team_name, avg_free_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb18-3"><a href="#cb18-3"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_free_margin)) <span class="sc">%&gt;%</span></span>
+<span id="cb18-4"><a href="#cb18-4"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  team_name avg_free_margin
+  &lt;chr&gt;               &lt;dbl&gt;
+1 Liberty              2.66</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2"></a>  <span class="fu">select</span>(team_name, avg_three_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_three_margin)) <span class="sc">%&gt;%</span></span>
+<span id="cb20-4"><a href="#cb20-4"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  team_name avg_three_margin
+  &lt;chr&gt;                &lt;dbl&gt;
+1 Dream                 2.83</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a>margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb22-2"><a href="#cb22-2"></a>  <span class="fu">select</span>(team_name, avg_turnover_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb22-3"><a href="#cb22-3"></a>  <span class="fu">arrange</span>(avg_turnover_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb22-4"><a href="#cb22-4"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  team_name avg_turnover_margin
+  &lt;chr&gt;                   &lt;dbl&gt;
+1 Storm                   -2.98</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a>margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb24-2"><a href="#cb24-2"></a>  <span class="fu">select</span>(team_name, avg_foul_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb24-3"><a href="#cb24-3"></a>  <span class="fu">arrange</span>(avg_foul_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb24-4"><a href="#cb24-4"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 2
+  team_name avg_foul_margin
+  &lt;chr&gt;               &lt;dbl&gt;
+1 Mystics             -1.43</code></pre>
+</div>
+</div>
+<p>It is interesting to see a variety of teams represented in these stats. It make sense that the Lynx had the greatest field goal margin given that they had the best record.</p>
+<p>These faceted bar plots display the average game margins of these stats for each team.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a><span class="co"># visualize margins by team</span></span>
+<span id="cb26-2"><a href="#cb26-2"></a><span class="fu">ggplot</span>(margin_avgs_pivoted, <span class="fu">aes</span>(<span class="at">x =</span> margin_type, <span class="at">y =</span> margin_value, <span class="at">fill =</span> margin_type)) <span class="sc">+</span></span>
+<span id="cb26-3"><a href="#cb26-3"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb26-4"><a href="#cb26-4"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb26-5"><a href="#cb26-5"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>team_name) <span class="sc">+</span></span>
+<span id="cb26-6"><a href="#cb26-6"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb26-7"><a href="#cb26-7"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_blank</span>(), <span class="at">axis.ticks.x =</span> <span class="fu">element_blank</span>()) <span class="sc">+</span></span>
+<span id="cb26-8"><a href="#cb26-8"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="st">""</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="eda-member1_files/figure-html/unnamed-chunk-3-2.png" class="img-fluid figure-img" width="672"></p>
+<p><img src="eda-member1_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
 </div>
+<p>The best teams in the league, such as the Lynx, Aces, Dream, and Mercury generally have positive scoring margins and lower or negative turnover and foul margins. The worst teams in the league, such as the Sun, Sky, and Wings display the opposite trends.</p>
+</section>
+<section id="play-by-play-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="play-by-play-dataset">Play-By-Play Dataset</h3>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1"></a><span class="co"># get dimensions</span></span>
+<span id="cb27-2"><a href="#cb27-2"></a><span class="fu">dim</span>(wnba_pbp)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 121342     62</code></pre>
+</div>
+</div>
+<p>For the play-by-play dataset, I made a variable for the type of shot.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a><span class="co"># create shot type variable</span></span>
+<span id="cb29-2"><a href="#cb29-2"></a>wnba_pbp <span class="ot">&lt;-</span> wnba_pbp <span class="sc">%&gt;%</span></span>
+<span id="cb29-3"><a href="#cb29-3"></a>  <span class="fu">filter</span>(shooting_play) <span class="sc">%&gt;%</span></span>
+<span id="cb29-4"><a href="#cb29-4"></a>  <span class="fu">mutate</span>(<span class="at">shot_type =</span> <span class="fu">case_when</span>(</span>
+<span id="cb29-5"><a href="#cb29-5"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Jump Shot"</span>) <span class="sc">~</span> <span class="st">"Jump Shot"</span>,</span>
+<span id="cb29-6"><a href="#cb29-6"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Layup Shot"</span>) <span class="sc">|</span> <span class="fu">str_detect</span>(type_text, <span class="st">"Layup"</span>) <span class="sc">~</span> <span class="st">"Layup Shot"</span>,</span>
+<span id="cb29-7"><a href="#cb29-7"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Free Throw"</span>) <span class="sc">~</span> <span class="st">"Free Throw"</span>,</span>
+<span id="cb29-8"><a href="#cb29-8"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Hook Shot"</span>) <span class="sc">|</span> <span class="fu">str_detect</span>(type_text, <span class="st">"Hook"</span>) <span class="sc">~</span> <span class="st">"Hook Shot"</span>,</span>
+<span id="cb29-9"><a href="#cb29-9"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Tip Shot"</span>) <span class="sc">~</span> <span class="st">"Tip Shot"</span>,</span>
+<span id="cb29-10"><a href="#cb29-10"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Dunk"</span>) <span class="sc">~</span> <span class="st">"Dunk Shot"</span></span>
+<span id="cb29-11"><a href="#cb29-11"></a>  )) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>This barplot displays the frequencies of different shot types, differentiated by whether or not the shot was made.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a>wnba_pbp <span class="sc">%&gt;%</span>  </span>
+<span id="cb30-2"><a href="#cb30-2"></a>  <span class="fu">filter</span>(game_id <span class="sc">!=</span> <span class="dv">401781604</span>) <span class="sc">%&gt;%</span> <span class="co">#filter out All Star game</span></span>
+<span id="cb30-3"><a href="#cb30-3"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> shot_type, <span class="at">fill =</span> scoring_play)) <span class="sc">+</span></span>
+<span id="cb30-4"><a href="#cb30-4"></a>  <span class="fu">geom_bar</span>() <span class="sc">+</span></span>
+<span id="cb30-5"><a href="#cb30-5"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="eda-member1_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Jumpshots are by far the most common shot, but they are not the easiest to make. Free throws and layups, which make up the majority of the rest of shots, are easier to make.</p>
 
 
 <!-- -->
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -1030,7 +1270,7 @@ cookieconsent.run({
     }
   });
   </script>
-<nav class="page-navigation column-page-right">
+<nav class="page-navigation column-body">
   <div class="nav-page nav-page-previous">
       <a href="../index.html" class="pagination-link" aria-label="Report">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Report</span></span>
@@ -1042,90 +1282,237 @@ cookieconsent.run({
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1"></a><span class="co">---</span></span>
-<span id="cb6-2"><a href="#cb6-2"></a><span class="an">title:</span><span class="co"> "Cate S."</span></span>
-<span id="cb6-3"><a href="#cb6-3"></a><span class="co">---</span></span>
-<span id="cb6-4"><a href="#cb6-4"></a></span>
-<span id="cb6-5"><a href="#cb6-5"></a>Your exploratory data analysis of the team datasets go here.</span>
-<span id="cb6-6"><a href="#cb6-6"></a></span>
-<span id="cb6-9"><a href="#cb6-9"></a><span class="in">```{r}</span></span>
-<span id="cb6-10"><a href="#cb6-10"></a><span class="fu">library</span>(wehoop)</span>
-<span id="cb6-11"><a href="#cb6-11"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb6-12"><a href="#cb6-12"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb6-13"><a href="#cb6-13"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb6-14"><a href="#cb6-14"></a><span class="fu">library</span>(ggrepel)</span>
-<span id="cb6-15"><a href="#cb6-15"></a></span>
-<span id="cb6-16"><a href="#cb6-16"></a></span>
-<span id="cb6-17"><a href="#cb6-17"></a>wnba_pbp <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_pbp</span>()</span>
-<span id="cb6-18"><a href="#cb6-18"></a>wnba_team_box <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_team_box</span>()</span>
-<span id="cb6-19"><a href="#cb6-19"></a>wnba_player_box <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_player_box</span>()</span>
-<span id="cb6-20"><a href="#cb6-20"></a><span class="in">```</span></span>
-<span id="cb6-21"><a href="#cb6-21"></a></span>
-<span id="cb6-24"><a href="#cb6-24"></a><span class="in">```{r}</span></span>
-<span id="cb6-25"><a href="#cb6-25"></a>top_scorers <span class="ot">&lt;-</span> wnba_player_box <span class="sc">%&gt;%</span></span>
-<span id="cb6-26"><a href="#cb6-26"></a>  <span class="fu">group_by</span>(athlete_display_name) <span class="sc">%&gt;%</span></span>
-<span id="cb6-27"><a href="#cb6-27"></a>  <span class="fu">summarize</span>(<span class="at">avg_ppg =</span> <span class="fu">mean</span>(points, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-28"><a href="#cb6-28"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_ppg))</span>
-<span id="cb6-29"><a href="#cb6-29"></a></span>
-<span id="cb6-30"><a href="#cb6-30"></a>top_scorers</span>
-<span id="cb6-31"><a href="#cb6-31"></a><span class="in">```</span></span>
-<span id="cb6-32"><a href="#cb6-32"></a></span>
-<span id="cb6-35"><a href="#cb6-35"></a><span class="in">```{r}</span></span>
-<span id="cb6-36"><a href="#cb6-36"></a>wnba_team_records <span class="ot">&lt;-</span> wnba_team_box <span class="sc">%&gt;%</span></span>
-<span id="cb6-37"><a href="#cb6-37"></a>  <span class="fu">filter</span>(team_name <span class="sc">!=</span> <span class="st">"TEAM CLARK"</span>, team_name <span class="sc">!=</span> <span class="st">"TEAM COLLIER"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb6-38"><a href="#cb6-38"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb6-39"><a href="#cb6-39"></a>    <span class="at">win =</span> <span class="fu">ifelse</span>(team_winner <span class="sc">==</span> <span class="cn">TRUE</span>, <span class="dv">1</span>, <span class="dv">0</span>),</span>
-<span id="cb6-40"><a href="#cb6-40"></a>    <span class="at">loss =</span> <span class="fu">ifelse</span>(team_winner <span class="sc">==</span> <span class="cn">FALSE</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb6-41"><a href="#cb6-41"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb6-42"><a href="#cb6-42"></a>  <span class="fu">group_by</span>(team_name) <span class="sc">%&gt;%</span></span>
-<span id="cb6-43"><a href="#cb6-43"></a>  <span class="fu">arrange</span>(team_name, game_date) <span class="sc">%&gt;%</span> </span>
-<span id="cb6-44"><a href="#cb6-44"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb6-45"><a href="#cb6-45"></a>    <span class="at">cumulative_wins =</span> <span class="fu">cumsum</span>(win),</span>
-<span id="cb6-46"><a href="#cb6-46"></a>    <span class="at">cumulative_losses =</span> <span class="fu">cumsum</span>(loss),</span>
-<span id="cb6-47"><a href="#cb6-47"></a>    <span class="at">record =</span> <span class="fu">paste0</span>(cumulative_wins, <span class="st">"-"</span>, cumulative_losses),</span>
-<span id="cb6-48"><a href="#cb6-48"></a>    <span class="at">win_pct =</span> cumulative_wins<span class="sc">/</span>(cumulative_wins <span class="sc">+</span> cumulative_losses)</span>
-<span id="cb6-49"><a href="#cb6-49"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb6-50"><a href="#cb6-50"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb6-51"><a href="#cb6-51"></a>  <span class="fu">mutate</span>(<span class="at">team_color =</span> <span class="fu">paste0</span>(<span class="st">"#"</span>, team_color)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-52"><a href="#cb6-52"></a>  <span class="fu">select</span>(team_name, game_date, win, loss, cumulative_wins, cumulative_losses, win_pct, record, team_color, field_goal_pct) </span>
-<span id="cb6-53"><a href="#cb6-53"></a></span>
-<span id="cb6-54"><a href="#cb6-54"></a>team_colors <span class="ot">&lt;-</span> wnba_team_box <span class="sc">%&gt;%</span></span>
-<span id="cb6-55"><a href="#cb6-55"></a>  <span class="fu">distinct</span>(team_name, team_color) <span class="sc">%&gt;%</span></span>
-<span id="cb6-56"><a href="#cb6-56"></a>  <span class="fu">mutate</span>(<span class="at">team_color =</span> <span class="fu">paste0</span>(<span class="st">"#"</span>, team_color)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-57"><a href="#cb6-57"></a>  <span class="fu">deframe</span>()</span>
-<span id="cb6-58"><a href="#cb6-58"></a></span>
-<span id="cb6-59"><a href="#cb6-59"></a>df_labels <span class="ot">&lt;-</span> wnba_team_records <span class="sc">%&gt;%</span></span>
-<span id="cb6-60"><a href="#cb6-60"></a>  <span class="fu">group_by</span>(team_name) <span class="sc">%&gt;%</span></span>
-<span id="cb6-61"><a href="#cb6-61"></a>  <span class="fu">filter</span>(game_date <span class="sc">==</span> <span class="fu">max</span>(game_date)) <span class="sc">%&gt;%</span></span>
-<span id="cb6-62"><a href="#cb6-62"></a>  <span class="fu">ungroup</span>() </span>
-<span id="cb6-63"><a href="#cb6-63"></a></span>
-<span id="cb6-64"><a href="#cb6-64"></a><span class="fu">ggplot</span>(wnba_team_records, <span class="fu">aes</span>(<span class="at">x =</span> game_date, <span class="at">y =</span> cumulative_wins, <span class="at">group =</span> team_name, <span class="at">color =</span> team_color)) <span class="sc">+</span></span>
-<span id="cb6-65"><a href="#cb6-65"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
-<span id="cb6-66"><a href="#cb6-66"></a>  <span class="fu">scale_color_identity</span>() <span class="sc">+</span> </span>
-<span id="cb6-67"><a href="#cb6-67"></a>  <span class="fu">geom_text_repel</span>(</span>
-<span id="cb6-68"><a href="#cb6-68"></a>    <span class="at">data =</span> df_labels,</span>
-<span id="cb6-69"><a href="#cb6-69"></a>    <span class="fu">aes</span>(<span class="at">label =</span> team_name),</span>
-<span id="cb6-70"><a href="#cb6-70"></a>    <span class="at">nudge_x =</span> <span class="dv">2</span>, </span>
-<span id="cb6-71"><a href="#cb6-71"></a>    <span class="at">hjust =</span> <span class="dv">0</span>,</span>
-<span id="cb6-72"><a href="#cb6-72"></a>    <span class="at">direction =</span> <span class="st">"y"</span>,</span>
-<span id="cb6-73"><a href="#cb6-73"></a>    <span class="at">segment.color =</span> <span class="cn">NA</span>, </span>
-<span id="cb6-74"><a href="#cb6-74"></a>    <span class="at">size =</span> <span class="fl">4.5</span>,</span>
-<span id="cb6-75"><a href="#cb6-75"></a>    <span class="at">fontface =</span> <span class="st">"bold"</span></span>
-<span id="cb6-76"><a href="#cb6-76"></a>  ) <span class="sc">+</span></span>
-<span id="cb6-77"><a href="#cb6-77"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>) <span class="sc">+</span></span>
-<span id="cb6-78"><a href="#cb6-78"></a>  <span class="fu">expand_limits</span>(<span class="at">x =</span> <span class="fu">max</span>(wnba_team_records<span class="sc">$</span>game_date) <span class="sc">+</span> <span class="dv">14</span>) <span class="sc">+</span></span>
-<span id="cb6-79"><a href="#cb6-79"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
-<span id="cb6-80"><a href="#cb6-80"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">as.Date</span>(<span class="st">"2025-09-11"</span>), <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"darkgrey"</span>)</span>
-<span id="cb6-81"><a href="#cb6-81"></a></span>
-<span id="cb6-82"><a href="#cb6-82"></a><span class="fu">ggplot</span>(wnba_team_records, <span class="fu">aes</span>(<span class="at">x =</span> game_date, <span class="at">y =</span> field_goal_pct)) <span class="sc">+</span></span>
-<span id="cb6-83"><a href="#cb6-83"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
-<span id="cb6-84"><a href="#cb6-84"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">14</span>) <span class="sc">+</span></span>
-<span id="cb6-85"><a href="#cb6-85"></a>  <span class="fu">expand_limits</span>(<span class="at">x =</span> <span class="fu">max</span>(wnba_team_records<span class="sc">$</span>game_date) <span class="sc">+</span> <span class="dv">14</span>) <span class="sc">+</span></span>
-<span id="cb6-86"><a href="#cb6-86"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>team_name) </span>
-<span id="cb6-87"><a href="#cb6-87"></a>  </span>
-<span id="cb6-88"><a href="#cb6-88"></a></span>
-<span id="cb6-89"><a href="#cb6-89"></a><span class="in">```</span></span>
-<span id="cb6-90"><a href="#cb6-90"></a></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31" data-shortcodes="false"><pre class="sourceCode numberSource markdown number-lines code-with-copy"><code class="sourceCode markdown"><span id="cb31-1"><a href="#cb31-1"></a><span class="co">---</span></span>
+<span id="cb31-2"><a href="#cb31-2"></a><span class="an">title:</span><span class="co"> "Cate S."</span></span>
+<span id="cb31-3"><a href="#cb31-3"></a><span class="co">---</span></span>
+<span id="cb31-4"><a href="#cb31-4"></a></span>
+<span id="cb31-7"><a href="#cb31-7"></a><span class="in">```{r}</span></span>
+<span id="cb31-8"><a href="#cb31-8"></a><span class="fu">library</span>(wehoop)</span>
+<span id="cb31-9"><a href="#cb31-9"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb31-10"><a href="#cb31-10"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb31-11"><a href="#cb31-11"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb31-12"><a href="#cb31-12"></a><span class="fu">library</span>(ggrepel)</span>
+<span id="cb31-13"><a href="#cb31-13"></a></span>
+<span id="cb31-14"><a href="#cb31-14"></a>wnba_pbp <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_pbp</span>()</span>
+<span id="cb31-15"><a href="#cb31-15"></a>wnba_team_box <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_team_box</span>()</span>
+<span id="cb31-16"><a href="#cb31-16"></a>wnba_player_box <span class="ot">&lt;-</span> wehoop<span class="sc">::</span><span class="fu">load_wnba_player_box</span>()</span>
+<span id="cb31-17"><a href="#cb31-17"></a><span class="in">```</span></span>
+<span id="cb31-18"><a href="#cb31-18"></a></span>
+<span id="cb31-19"><a href="#cb31-19"></a></span>
+<span id="cb31-20"><a href="#cb31-20"></a><span class="fu">### Player Dataset</span></span>
+<span id="cb31-21"><a href="#cb31-21"></a></span>
+<span id="cb31-22"><a href="#cb31-22"></a>dimensions:</span>
+<span id="cb31-23"><a href="#cb31-23"></a></span>
+<span id="cb31-26"><a href="#cb31-26"></a><span class="in">```{r}</span></span>
+<span id="cb31-27"><a href="#cb31-27"></a><span class="co"># get dimensions</span></span>
+<span id="cb31-28"><a href="#cb31-28"></a><span class="fu">dim</span>(wnba_player_box)</span>
+<span id="cb31-29"><a href="#cb31-29"></a><span class="in">```</span></span>
+<span id="cb31-30"><a href="#cb31-30"></a></span>
+<span id="cb31-31"><a href="#cb31-31"></a>First, I looked at the league's best players. I made a new dataset with the average stats for each player and ordered it by the most points per game.</span>
+<span id="cb31-32"><a href="#cb31-32"></a></span>
+<span id="cb31-35"><a href="#cb31-35"></a><span class="in">```{r}</span></span>
+<span id="cb31-36"><a href="#cb31-36"></a><span class="co"># find the league's best players</span></span>
+<span id="cb31-37"><a href="#cb31-37"></a>top_players <span class="ot">&lt;-</span> wnba_player_box <span class="sc">%&gt;%</span></span>
+<span id="cb31-38"><a href="#cb31-38"></a>  <span class="fu">group_by</span>(athlete_display_name) <span class="sc">%&gt;%</span></span>
+<span id="cb31-39"><a href="#cb31-39"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb31-40"><a href="#cb31-40"></a>    <span class="at">avg_ppg =</span> <span class="fu">mean</span>(points, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb31-41"><a href="#cb31-41"></a>    <span class="at">avg_blocks =</span> <span class="fu">mean</span>(blocks, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb31-42"><a href="#cb31-42"></a>    <span class="at">avg_rebounds =</span> <span class="fu">mean</span>((offensive_rebounds <span class="sc">+</span> defensive_rebounds), <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb31-43"><a href="#cb31-43"></a>    <span class="at">avg_assists =</span> <span class="fu">mean</span>(assists, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb31-44"><a href="#cb31-44"></a>    <span class="at">avg_steals =</span> <span class="fu">mean</span>(steals, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb31-45"><a href="#cb31-45"></a>    )</span>
+<span id="cb31-46"><a href="#cb31-46"></a></span>
+<span id="cb31-47"><a href="#cb31-47"></a>top_players <span class="sc">%&gt;%</span></span>
+<span id="cb31-48"><a href="#cb31-48"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_ppg)) <span class="sc">%&gt;%</span></span>
+<span id="cb31-49"><a href="#cb31-49"></a>  <span class="fu">head</span>(<span class="dv">10</span>)</span>
+<span id="cb31-50"><a href="#cb31-50"></a><span class="in">```</span></span>
+<span id="cb31-51"><a href="#cb31-51"></a></span>
+<span id="cb31-52"><a href="#cb31-52"></a>A'ja Wilson led the league in scoring. In addition to playing for the championship team, the Las Vegas Aces, she was also named MVP.</span>
+<span id="cb31-53"><a href="#cb31-53"></a></span>
+<span id="cb31-54"><a href="#cb31-54"></a><span class="fu">### Team Dataset</span></span>
+<span id="cb31-55"><a href="#cb31-55"></a></span>
+<span id="cb31-56"><a href="#cb31-56"></a>dimensions:</span>
+<span id="cb31-57"><a href="#cb31-57"></a></span>
+<span id="cb31-60"><a href="#cb31-60"></a><span class="in">```{r}</span></span>
+<span id="cb31-61"><a href="#cb31-61"></a><span class="co"># get dimensions</span></span>
+<span id="cb31-62"><a href="#cb31-62"></a><span class="fu">dim</span>(wnba_team_box)</span>
+<span id="cb31-63"><a href="#cb31-63"></a><span class="in">```</span></span>
+<span id="cb31-64"><a href="#cb31-64"></a></span>
+<span id="cb31-65"><a href="#cb31-65"></a>I made running counts of each teams wins and losses so that their records could be determined at any point in the season. I made a visualization showing the cumulative wins for each team over the course of the season.</span>
+<span id="cb31-66"><a href="#cb31-66"></a></span>
+<span id="cb31-69"><a href="#cb31-69"></a><span class="in">```{r}</span></span>
+<span id="cb31-70"><a href="#cb31-70"></a><span class="co"># determine records for each team</span></span>
+<span id="cb31-71"><a href="#cb31-71"></a>wnba_team_records <span class="ot">&lt;-</span> wnba_team_box <span class="sc">%&gt;%</span></span>
+<span id="cb31-72"><a href="#cb31-72"></a>  <span class="fu">filter</span>(team_name <span class="sc">!=</span> <span class="st">"TEAM CLARK"</span>, team_name <span class="sc">!=</span> <span class="st">"TEAM COLLIER"</span>) <span class="sc">%&gt;%</span> <span class="co"># remove All Star teams</span></span>
+<span id="cb31-73"><a href="#cb31-73"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb31-74"><a href="#cb31-74"></a>    <span class="at">win =</span> <span class="fu">ifelse</span>(team_winner <span class="sc">==</span> <span class="cn">TRUE</span>, <span class="dv">1</span>, <span class="dv">0</span>),</span>
+<span id="cb31-75"><a href="#cb31-75"></a>    <span class="at">loss =</span> <span class="fu">ifelse</span>(team_winner <span class="sc">==</span> <span class="cn">FALSE</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb31-76"><a href="#cb31-76"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb31-77"><a href="#cb31-77"></a>  <span class="fu">group_by</span>(team_name) <span class="sc">%&gt;%</span></span>
+<span id="cb31-78"><a href="#cb31-78"></a>  <span class="fu">arrange</span>(team_name, game_date) <span class="sc">%&gt;%</span> </span>
+<span id="cb31-79"><a href="#cb31-79"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb31-80"><a href="#cb31-80"></a>    <span class="at">cumulative_wins =</span> <span class="fu">cumsum</span>(win),</span>
+<span id="cb31-81"><a href="#cb31-81"></a>    <span class="at">cumulative_losses =</span> <span class="fu">cumsum</span>(loss),</span>
+<span id="cb31-82"><a href="#cb31-82"></a>    <span class="at">record =</span> <span class="fu">paste0</span>(cumulative_wins, <span class="st">"-"</span>, cumulative_losses),</span>
+<span id="cb31-83"><a href="#cb31-83"></a>    <span class="at">win_pct =</span> cumulative_wins<span class="sc">/</span>(cumulative_wins <span class="sc">+</span> cumulative_losses)</span>
+<span id="cb31-84"><a href="#cb31-84"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb31-85"><a href="#cb31-85"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb31-86"><a href="#cb31-86"></a>  <span class="fu">mutate</span>(<span class="at">team_color =</span> <span class="fu">paste0</span>(<span class="st">"#"</span>, team_color))</span>
+<span id="cb31-87"><a href="#cb31-87"></a><span class="in">```</span></span>
+<span id="cb31-88"><a href="#cb31-88"></a></span>
+<span id="cb31-91"><a href="#cb31-91"></a><span class="in">```{r}</span></span>
+<span id="cb31-92"><a href="#cb31-92"></a><span class="co"># visualize records</span></span>
+<span id="cb31-93"><a href="#cb31-93"></a><span class="fu">ggplot</span>(wnba_team_records, <span class="fu">aes</span>(<span class="at">x =</span> game_date, <span class="at">y =</span> cumulative_wins, <span class="at">color =</span> team_name)) <span class="sc">+</span></span>
+<span id="cb31-94"><a href="#cb31-94"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb31-95"><a href="#cb31-95"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="fu">as.Date</span>(<span class="st">"2025-09-11"</span>), <span class="at">linetype =</span> <span class="st">"dashed"</span>) <span class="sc">+</span></span>
+<span id="cb31-96"><a href="#cb31-96"></a>  <span class="fu">theme_classic</span>()</span>
+<span id="cb31-97"><a href="#cb31-97"></a><span class="in">```</span></span>
+<span id="cb31-98"><a href="#cb31-98"></a></span>
+<span id="cb31-99"><a href="#cb31-99"></a>The black line represents the end of the regular season and beginning of the playoffs. The lines for each team end at varying points, depending on when they were eliminated. The Minnesota Lynx had the best record throughout the regular season, but then they were eliminated in the semi-finals. The Aces struggled in the first half of the season but then went on a massive winning streak which took them to the championships.</span>
+<span id="cb31-100"><a href="#cb31-100"></a></span>
+<span id="cb31-101"><a href="#cb31-101"></a>Next, I found the teams that led the league in various shot percentages.</span>
+<span id="cb31-102"><a href="#cb31-102"></a></span>
+<span id="cb31-105"><a href="#cb31-105"></a><span class="in">```{r}</span></span>
+<span id="cb31-106"><a href="#cb31-106"></a><span class="co"># determine teams with the best avg shot percentages</span></span>
+<span id="cb31-107"><a href="#cb31-107"></a>shot_percentages <span class="ot">&lt;-</span> wnba_team_records <span class="sc">%&gt;%</span></span>
+<span id="cb31-108"><a href="#cb31-108"></a>  <span class="fu">select</span>(field_goal_pct, free_throw_pct, three_point_field_goal_pct, team_name) <span class="sc">%&gt;%</span></span>
+<span id="cb31-109"><a href="#cb31-109"></a>  <span class="fu">group_by</span>(team_name) <span class="sc">%&gt;%</span></span>
+<span id="cb31-110"><a href="#cb31-110"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb31-111"><a href="#cb31-111"></a>    <span class="at">avg_field_goal =</span> <span class="fu">mean</span>(field_goal_pct),</span>
+<span id="cb31-112"><a href="#cb31-112"></a>    <span class="at">avg_free_throw =</span> <span class="fu">mean</span>(free_throw_pct),</span>
+<span id="cb31-113"><a href="#cb31-113"></a>    <span class="at">avg_three =</span> <span class="fu">mean</span>(three_point_field_goal_pct),</span>
+<span id="cb31-114"><a href="#cb31-114"></a>  )</span>
+<span id="cb31-115"><a href="#cb31-115"></a></span>
+<span id="cb31-116"><a href="#cb31-116"></a>shot_percentages <span class="sc">%&gt;%</span></span>
+<span id="cb31-117"><a href="#cb31-117"></a>  <span class="fu">select</span>(team_name, avg_field_goal) <span class="sc">%&gt;%</span></span>
+<span id="cb31-118"><a href="#cb31-118"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_field_goal)) <span class="sc">%&gt;%</span></span>
+<span id="cb31-119"><a href="#cb31-119"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb31-120"><a href="#cb31-120"></a></span>
+<span id="cb31-121"><a href="#cb31-121"></a>shot_percentages <span class="sc">%&gt;%</span></span>
+<span id="cb31-122"><a href="#cb31-122"></a>  <span class="fu">select</span>(team_name, avg_free_throw) <span class="sc">%&gt;%</span></span>
+<span id="cb31-123"><a href="#cb31-123"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_free_throw)) <span class="sc">%&gt;%</span></span>
+<span id="cb31-124"><a href="#cb31-124"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb31-125"><a href="#cb31-125"></a></span>
+<span id="cb31-126"><a href="#cb31-126"></a>shot_percentages <span class="sc">%&gt;%</span></span>
+<span id="cb31-127"><a href="#cb31-127"></a>  <span class="fu">select</span>(team_name, avg_three) <span class="sc">%&gt;%</span></span>
+<span id="cb31-128"><a href="#cb31-128"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_three)) <span class="sc">%&gt;%</span></span>
+<span id="cb31-129"><a href="#cb31-129"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb31-130"><a href="#cb31-130"></a><span class="in">```</span></span>
+<span id="cb31-131"><a href="#cb31-131"></a>These shooting stats support the finding from the previous plot that the Lynx had the best regular season record.</span>
+<span id="cb31-132"><a href="#cb31-132"></a></span>
+<span id="cb31-133"><a href="#cb31-133"></a>As a way of comparing how each team typically matched up against their opponents, I calculated the margins for various stats. I then took the averages and displayed the teams with the highest field goal, free throw, and three pointer margins and lowest turnover and foul margins.</span>
+<span id="cb31-134"><a href="#cb31-134"></a> </span>
+<span id="cb31-137"><a href="#cb31-137"></a><span class="in">```{r}</span></span>
+<span id="cb31-138"><a href="#cb31-138"></a><span class="co"># determine game margins for different performance stats</span></span>
+<span id="cb31-139"><a href="#cb31-139"></a>margins <span class="ot">&lt;-</span> wnba_team_records <span class="sc">%&gt;%</span></span>
+<span id="cb31-140"><a href="#cb31-140"></a>  <span class="fu">group_by</span>(game_id) <span class="sc">%&gt;%</span></span>
+<span id="cb31-141"><a href="#cb31-141"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb31-142"><a href="#cb31-142"></a>    <span class="at">field_margin =</span> field_goals_made <span class="sc">-</span> <span class="fu">rev</span>(field_goals_made),</span>
+<span id="cb31-143"><a href="#cb31-143"></a>    <span class="at">free_margin =</span> free_throws_made <span class="sc">-</span> <span class="fu">rev</span>(free_throws_made),</span>
+<span id="cb31-144"><a href="#cb31-144"></a>    <span class="at">three_margin =</span> three_point_field_goals_made <span class="sc">-</span> <span class="fu">rev</span>(three_point_field_goals_made),</span>
+<span id="cb31-145"><a href="#cb31-145"></a>    <span class="at">turnover_margin =</span> turnovers <span class="sc">-</span> <span class="fu">rev</span>(turnovers),</span>
+<span id="cb31-146"><a href="#cb31-146"></a>    <span class="at">foul_margin =</span> fouls <span class="sc">-</span> <span class="fu">rev</span>(fouls)</span>
+<span id="cb31-147"><a href="#cb31-147"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb31-148"><a href="#cb31-148"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb31-149"><a href="#cb31-149"></a>  <span class="fu">select</span>(game_id, team_name, field_margin, free_margin, three_margin, turnover_margin, foul_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb31-150"><a href="#cb31-150"></a>  <span class="fu">arrange</span>(game_id) </span>
+<span id="cb31-151"><a href="#cb31-151"></a></span>
+<span id="cb31-152"><a href="#cb31-152"></a><span class="co"># calculate average margins by team</span></span>
+<span id="cb31-153"><a href="#cb31-153"></a>margin_avgs <span class="ot">&lt;-</span> margins <span class="sc">%&gt;%</span></span>
+<span id="cb31-154"><a href="#cb31-154"></a>  <span class="fu">group_by</span>(team_name) <span class="sc">%&gt;%</span></span>
+<span id="cb31-155"><a href="#cb31-155"></a>  <span class="fu">summarize</span>(</span>
+<span id="cb31-156"><a href="#cb31-156"></a>    <span class="at">avg_field_margin =</span> <span class="fu">mean</span>(field_margin),</span>
+<span id="cb31-157"><a href="#cb31-157"></a>    <span class="at">avg_free_margin =</span> <span class="fu">mean</span>(free_margin),</span>
+<span id="cb31-158"><a href="#cb31-158"></a>    <span class="at">avg_three_margin =</span> <span class="fu">mean</span>(three_margin),</span>
+<span id="cb31-159"><a href="#cb31-159"></a>    <span class="at">avg_turnover_margin =</span> <span class="fu">mean</span>(turnover_margin),</span>
+<span id="cb31-160"><a href="#cb31-160"></a>    <span class="at">avg_foul_margin =</span> <span class="fu">mean</span>(foul_margin)</span>
+<span id="cb31-161"><a href="#cb31-161"></a>  ) </span>
+<span id="cb31-162"><a href="#cb31-162"></a></span>
+<span id="cb31-163"><a href="#cb31-163"></a>margin_avgs_pivoted <span class="ot">&lt;-</span> margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb31-164"><a href="#cb31-164"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb31-165"><a href="#cb31-165"></a>    <span class="at">cols =</span> <span class="fu">c</span>(avg_field_margin, avg_free_margin, avg_three_margin, avg_turnover_margin, avg_foul_margin),</span>
+<span id="cb31-166"><a href="#cb31-166"></a>    <span class="at">names_to =</span> <span class="st">"margin_type"</span>,</span>
+<span id="cb31-167"><a href="#cb31-167"></a>    <span class="at">values_to =</span> <span class="st">"margin_value"</span></span>
+<span id="cb31-168"><a href="#cb31-168"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb31-169"><a href="#cb31-169"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb31-170"><a href="#cb31-170"></a>    <span class="at">margin_type =</span> <span class="fu">fct_relevel</span>(margin_type, <span class="st">"avg_field_margin"</span>, <span class="st">"avg_free_margin"</span>, <span class="st">"avg_three_margin"</span>, <span class="st">"avg_turnover_margin"</span>, <span class="st">"avg_foul_margin"</span>)</span>
+<span id="cb31-171"><a href="#cb31-171"></a>  )</span>
+<span id="cb31-172"><a href="#cb31-172"></a></span>
+<span id="cb31-173"><a href="#cb31-173"></a>margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb31-174"><a href="#cb31-174"></a>  <span class="fu">select</span>(team_name, avg_field_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb31-175"><a href="#cb31-175"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_field_margin)) <span class="sc">%&gt;%</span></span>
+<span id="cb31-176"><a href="#cb31-176"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb31-177"><a href="#cb31-177"></a></span>
+<span id="cb31-178"><a href="#cb31-178"></a>margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb31-179"><a href="#cb31-179"></a>  <span class="fu">select</span>(team_name, avg_free_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb31-180"><a href="#cb31-180"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_free_margin)) <span class="sc">%&gt;%</span></span>
+<span id="cb31-181"><a href="#cb31-181"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb31-182"><a href="#cb31-182"></a></span>
+<span id="cb31-183"><a href="#cb31-183"></a>margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb31-184"><a href="#cb31-184"></a>  <span class="fu">select</span>(team_name, avg_three_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb31-185"><a href="#cb31-185"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(avg_three_margin)) <span class="sc">%&gt;%</span></span>
+<span id="cb31-186"><a href="#cb31-186"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb31-187"><a href="#cb31-187"></a></span>
+<span id="cb31-188"><a href="#cb31-188"></a>margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb31-189"><a href="#cb31-189"></a>  <span class="fu">select</span>(team_name, avg_turnover_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb31-190"><a href="#cb31-190"></a>  <span class="fu">arrange</span>(avg_turnover_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb31-191"><a href="#cb31-191"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb31-192"><a href="#cb31-192"></a></span>
+<span id="cb31-193"><a href="#cb31-193"></a>margin_avgs <span class="sc">%&gt;%</span></span>
+<span id="cb31-194"><a href="#cb31-194"></a>  <span class="fu">select</span>(team_name, avg_foul_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb31-195"><a href="#cb31-195"></a>  <span class="fu">arrange</span>(avg_foul_margin) <span class="sc">%&gt;%</span></span>
+<span id="cb31-196"><a href="#cb31-196"></a>  <span class="fu">slice</span>(<span class="dv">1</span>)</span>
+<span id="cb31-197"><a href="#cb31-197"></a><span class="in">```</span></span>
+<span id="cb31-198"><a href="#cb31-198"></a>It is interesting to see a variety of teams represented in these stats. It make sense that the Lynx had the greatest field goal margin given that they had the best record.</span>
+<span id="cb31-199"><a href="#cb31-199"></a></span>
+<span id="cb31-200"><a href="#cb31-200"></a>These faceted bar plots display the average game margins of these stats for each team.</span>
+<span id="cb31-201"><a href="#cb31-201"></a></span>
+<span id="cb31-204"><a href="#cb31-204"></a><span class="in">```{r}</span></span>
+<span id="cb31-205"><a href="#cb31-205"></a><span class="co"># visualize margins by team</span></span>
+<span id="cb31-206"><a href="#cb31-206"></a><span class="fu">ggplot</span>(margin_avgs_pivoted, <span class="fu">aes</span>(<span class="at">x =</span> margin_type, <span class="at">y =</span> margin_value, <span class="at">fill =</span> margin_type)) <span class="sc">+</span></span>
+<span id="cb31-207"><a href="#cb31-207"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
+<span id="cb31-208"><a href="#cb31-208"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb31-209"><a href="#cb31-209"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>team_name) <span class="sc">+</span></span>
+<span id="cb31-210"><a href="#cb31-210"></a>  <span class="fu">theme_classic</span>() <span class="sc">+</span></span>
+<span id="cb31-211"><a href="#cb31-211"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_blank</span>(), <span class="at">axis.ticks.x =</span> <span class="fu">element_blank</span>()) <span class="sc">+</span></span>
+<span id="cb31-212"><a href="#cb31-212"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="st">""</span>)</span>
+<span id="cb31-213"><a href="#cb31-213"></a><span class="in">```</span></span>
+<span id="cb31-214"><a href="#cb31-214"></a></span>
+<span id="cb31-215"><a href="#cb31-215"></a>The best teams in the league, such as the Lynx, Aces, Dream, and Mercury generally have positive scoring margins and lower or negative turnover and foul margins. The worst teams in the league, such as the Sun, Sky, and Wings display the opposite trends.</span>
+<span id="cb31-216"><a href="#cb31-216"></a></span>
+<span id="cb31-217"><a href="#cb31-217"></a><span class="fu">### Play-By-Play Dataset</span></span>
+<span id="cb31-218"><a href="#cb31-218"></a></span>
+<span id="cb31-221"><a href="#cb31-221"></a><span class="in">```{r}</span></span>
+<span id="cb31-222"><a href="#cb31-222"></a><span class="co"># get dimensions</span></span>
+<span id="cb31-223"><a href="#cb31-223"></a><span class="fu">dim</span>(wnba_pbp)</span>
+<span id="cb31-224"><a href="#cb31-224"></a><span class="in">```</span></span>
+<span id="cb31-225"><a href="#cb31-225"></a></span>
+<span id="cb31-226"><a href="#cb31-226"></a>For the play-by-play dataset, I made a variable for the type of shot.</span>
+<span id="cb31-227"><a href="#cb31-227"></a></span>
+<span id="cb31-230"><a href="#cb31-230"></a><span class="in">```{r}</span></span>
+<span id="cb31-231"><a href="#cb31-231"></a><span class="co"># create shot type variable</span></span>
+<span id="cb31-232"><a href="#cb31-232"></a>wnba_pbp <span class="ot">&lt;-</span> wnba_pbp <span class="sc">%&gt;%</span></span>
+<span id="cb31-233"><a href="#cb31-233"></a>  <span class="fu">filter</span>(shooting_play) <span class="sc">%&gt;%</span></span>
+<span id="cb31-234"><a href="#cb31-234"></a>  <span class="fu">mutate</span>(<span class="at">shot_type =</span> <span class="fu">case_when</span>(</span>
+<span id="cb31-235"><a href="#cb31-235"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Jump Shot"</span>) <span class="sc">~</span> <span class="st">"Jump Shot"</span>,</span>
+<span id="cb31-236"><a href="#cb31-236"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Layup Shot"</span>) <span class="sc">|</span> <span class="fu">str_detect</span>(type_text, <span class="st">"Layup"</span>) <span class="sc">~</span> <span class="st">"Layup Shot"</span>,</span>
+<span id="cb31-237"><a href="#cb31-237"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Free Throw"</span>) <span class="sc">~</span> <span class="st">"Free Throw"</span>,</span>
+<span id="cb31-238"><a href="#cb31-238"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Hook Shot"</span>) <span class="sc">|</span> <span class="fu">str_detect</span>(type_text, <span class="st">"Hook"</span>) <span class="sc">~</span> <span class="st">"Hook Shot"</span>,</span>
+<span id="cb31-239"><a href="#cb31-239"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Tip Shot"</span>) <span class="sc">~</span> <span class="st">"Tip Shot"</span>,</span>
+<span id="cb31-240"><a href="#cb31-240"></a>    <span class="fu">str_detect</span>(type_text, <span class="st">"Dunk"</span>) <span class="sc">~</span> <span class="st">"Dunk Shot"</span></span>
+<span id="cb31-241"><a href="#cb31-241"></a>  )) </span>
+<span id="cb31-242"><a href="#cb31-242"></a><span class="in">```</span></span>
+<span id="cb31-243"><a href="#cb31-243"></a></span>
+<span id="cb31-244"><a href="#cb31-244"></a>This barplot displays the frequencies of different shot types, differentiated by whether or not the shot was made.</span>
+<span id="cb31-245"><a href="#cb31-245"></a></span>
+<span id="cb31-248"><a href="#cb31-248"></a><span class="in">```{r}</span></span>
+<span id="cb31-249"><a href="#cb31-249"></a>wnba_pbp <span class="sc">%&gt;%</span>  </span>
+<span id="cb31-250"><a href="#cb31-250"></a>  <span class="fu">filter</span>(game_id <span class="sc">!=</span> <span class="dv">401781604</span>) <span class="sc">%&gt;%</span> <span class="co">#filter out All Star game</span></span>
+<span id="cb31-251"><a href="#cb31-251"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">y =</span> shot_type, <span class="at">fill =</span> scoring_play)) <span class="sc">+</span></span>
+<span id="cb31-252"><a href="#cb31-252"></a>  <span class="fu">geom_bar</span>() <span class="sc">+</span></span>
+<span id="cb31-253"><a href="#cb31-253"></a>  <span class="fu">theme_classic</span>()</span>
+<span id="cb31-254"><a href="#cb31-254"></a><span class="in">```</span></span>
+<span id="cb31-255"><a href="#cb31-255"></a>Jumpshots are by far the most common shot, but they are not the easiest to make. Free throws and layups, which make up the majority of the rest of shots, are easier to make.</span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
