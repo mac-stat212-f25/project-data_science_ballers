@@ -2,11 +2,11 @@
 title: "Case Study"
 ---
 
-
-We read a data story called "[Text analysis of Trump's tweets confirms he writes only the (angrier) Android half](http://varianceexplained.org/r/trump-tweets/)." David Robinson looked at a dataset of Trump's tweets, sent from iPhone and Android. In his analysis, he looked at time of day, hashtag and link usage, retweets, word composition, and sentiment.
+We read a data story called "[Text analysis of Trump's tweets confirms he writes only the (angrier) Android half](http://varianceexplained.org/r/trump-tweets/)." David Robinson looked at a dataset of Trump's tweets, sent from iPhone and Android.
+In his analysis, he looked at time of day, hashtag and link usage, retweets, word composition, and sentiment.
 He concluded that the Android and iPhone tweets are from different people and that the Android tweets (written by Trump) are angrier than the iPhone tweets (written by his campaign).
-
-Notes
+Overall, we thought the report had a nice flow between text, visualizations, and code chunks and is a good model for our project.
+Listed below are some more detailed observations about the structure of the report.
 
 -   Presents the driving question/purpose of analysis early on in the data story
 
@@ -25,10 +25,6 @@ Notes
 -   Not very technical, avoids jargon, understandable by wide audience
 
 -   Visualizations are simple and have clear messages, but the report could have benefited from at least one more complex, eye-catching visualization
-
--   Overall nice flow between text, visualizations, and code chunks
-
-    -   Good model for our report
 
 Citation: Robinson, D.
 (2016, August 9).
