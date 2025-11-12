@@ -1,5 +1,35 @@
 ---
-title: "Member 2 First Name & Last Name Initial"
+title: "Karyna S."
 ---
 
 Your exploratory data analysis of the team datasets go here.
+```{r}
+library(tidyverse)
+library(DataExplorer)
+library(gtsummary)
+library(visdat)
+library(wehoop)
+```
+
+# The Dataset
+
+The dataset below is...
+```{r}
+wnba_pbp <- load_wnba_pbp()
+head(wnba_pbp)
+```
+
+## Data Description
+
+```{r}
+wnba_pbp %>%
+  select(!type_abbreviation) %>%
+  tbl_summary()
+```
+
+
+
+
+
+
+
