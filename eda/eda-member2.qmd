@@ -2,34 +2,124 @@
 title: "Karyna S."
 ---
 
-Your exploratory data analysis of the team datasets go here.
 ```{r}
-library(tidyverse)
-library(DataExplorer)
-library(gtsummary)
-library(visdat)
 library(wehoop)
+library(tidyverse)
+library(ggplot2)
+library(jpeg)
+library(magick)
 ```
-
-# The Dataset
-
-The dataset below is...
-```{r}
-wnba_pbp <- load_wnba_pbp()
-head(wnba_pbp)
-```
-
-## Data Description
 
 ```{r}
-wnba_pbp %>%
-  select(!type_abbreviation) %>%
-  tbl_summary()
+wnba <- load_wnba_pbp()
+head(wnba)
+names(wnba)
+```
+# Data summary
+```{r}
+dim(wnba)
+```
+
+```{r}
+# Variable types (numeric, factor, character)
+str(wnba)
+```
+
+```{r}
+# Missing values per column
+colSums(is.na(wnba))
+```
+
+```{r}
+# Basic descriptive stats for numeric columns
+summary(wnba)
+```
+
+```{r}
+# Number of games and plays
+wnba %>% summarise(
+  total_games = n_distinct(game_id),
+  total_plays = n()
+)
+
+# Number of scoring plays
+wnba %>% summarise(scoring_plays = sum(scoring_play))
+
+# Top players by scoring
+wnba %>%
+  filter(scoring_play == TRUE) %>%
+  group_by(athlete_id_1) %>%
+  summarise(points = sum(score_value, na.rm = TRUE)) %>%
+  arrange(desc(points)) %>%
+  head(10)
 ```
 
 
+# Data Exploration
 
+## Preliminary data exploration
+```{r}
+# Points and plays per person
+wnba %>%
+  filter(scoring_play == TRUE) %>%
+  group_by(athlete_id_1) %>%
+  summarise(total_points = sum(score_value, na.rm = TRUE),
+            total_plays = n()) %>%
+  arrange(desc(total_points))
+```
 
+## Using coordinates to map players' shot completion
+```{r}
+#Top three WNBA players in different positions by points
+wilson <- 3149391
+collier <- 3917450
+ionescu <- 4066533
 
+#Dividing by player id and position
+df <- wnba %>%
+  filter(scoring_play == TRUE) %>%
+  filter(athlete_id_1 %in% c(ionescu, wilson, collier)) %>%
+  select(athlete_id_1, type_text, coordinate_x_raw, coordinate_y_raw) %>%
+  mutate(player = case_when(
+    athlete_id_1 == ionescu ~ "Sabrina Ionescu",
+    athlete_id_1 == wilson ~ "A'ja Wilson",
+    athlete_id_1 == collier ~ "Napheesa Collier")) %>%
+  mutate(position = case_when(
+    player == "A'ja Wilson" ~ "Center",
+    player == "Napheesa Collier" ~ "Forward",
+    player == "Sabrina Ionescu" ~ "Guard"
+  )) %>%
+  mutate(coordinate_y_raw = coordinate_y_raw + 4)
+head(df)
+```
+```{r}
+# Distribution of shot types
+df %>%
+  count(type_text, sort = TRUE) %>%
+  ggplot(aes(x = reorder(type_text, n), y = n)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Distribution of Shot Types")
+```
 
+```{r}
+ggplot(df, aes(x = coordinate_x_raw, y = coordinate_y_raw, color = player)) +
+  geom_point(alpha = 0.5) +
+  coord_fixed() +
+  scale_y_reverse() +
+  facet_wrap(~position) +
+  labs(title = "Shot Coordinates by Player and Position")
+```
+## Final game play by play visualization
 
+```{r}
+wnba2 <- wnba %>%
+  filter(game_id == 401820329)
+
+ggplot(wnba2, aes(x = start_game_seconds_remaining, y = home_score, color = "Home")) + 
+  geom_line(size = 1) + 
+  geom_line(aes(y = away_score, color = "Away"), size = 1) + 
+  scale_x_reverse() + 
+  labs( title = "Score Progression in Final Game", x = "Seconds Remaining", y = "Score", color = "Team" ) + 
+  theme_minimal()
+```
