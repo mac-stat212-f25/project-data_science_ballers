@@ -123,3 +123,40 @@ ggplot(wnba2, aes(x = start_game_seconds_remaining, y = home_score, color = "Hom
   labs( title = "Score Progression in Final Game", x = "Seconds Remaining", y = "Score", color = "Team" ) + 
   theme_minimal()
 ```
+```{r}
+wnba_player_box <- wehoop::load_wnba_player_box()
+```
+
+```{r}
+player_stats <- wnba_player_box %>%
+  group_by(athlete_display_name) %>%
+  summarize(
+    avg_ppg = mean(points, na.rm = TRUE),
+    avg_blocks = mean(blocks, na.rm = TRUE),
+    avg_rebounds = mean((offensive_rebounds + defensive_rebounds), na.rm = TRUE),
+    avg_assists = mean(assists, na.rm = TRUE),
+    avg_steals = mean(steals, na.rm = TRUE),
+    ) 
+player_stats
+```
+
+```{r}
+player_sd_stats <- player_stats %>%
+  mutate(
+    sd_ppg = scale(avg_ppg),
+    sd_blocks = scale(avg_blocks),
+    sd_rebounds = scale(avg_rebounds),
+    sd_assists = scale(avg_assists),
+    sd_steals = scale(avg_steals)
+  ) %>%
+  rowwise() %>%
+  mutate(
+    overall_impact = mean(c(sd_ppg, sd_blocks, sd_rebounds, sd_assists, sd_steals))
+  ) %>%
+  ungroup() %>%
+  arrange(desc(overall_impact)) %>%
+  select(c(athlete_display_name, overall_impact))
+player_sd_stats
+```
+
+
