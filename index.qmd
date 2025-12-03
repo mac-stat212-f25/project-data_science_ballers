@@ -2,8 +2,23 @@
 title: "Report"
 ---
 
-Your report goes here.
+#TITLE
 
+Introduction
+
+Our Dataset
+
+Individual Performance Statistics
+
+Comparison Between Players
+
+Salary vs Performance
+
+Popularity vs. Performance
+
+Analysis
+
+Conclusion
 ```{r}
 # a test code chunk
 ```
