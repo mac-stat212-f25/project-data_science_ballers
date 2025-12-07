@@ -4,11 +4,20 @@ title: "Performance Analysis of the 2025 WNBA Season"
 
 ## Motivation
 
+In 2019, women made up 44% of all sports participants, but received less than 5% of sports media coverage and less than 1% of total sports sponsorship dollars. In recent years, however, women’s sports have experienced a rapid rise in popularity. This has coincided with the growth of the Women’s National Basketball Association (WNBA). The 2025 season set new records for both attendance and viewership. The league, which currently consists of 13 teams, has announced that it plans to expand to 18 teams by 2030. The growth of the WNBA has also created new opportunities for women off the court with more women occupying positions as media commentators, analysts, coaches, and executives. However, there is still work to be done. Although the WNBA is receiving more attention, athletes aren't being compensated at an equivalent rate. Players, uniting under slogans like "Pay Us What You Owe Us," are demanding a larger cut of the league's increased media revenue. As student-athletes, we were interested in exploring the 2025 WNBA season, analyzing performance at the team and individual levels and how it relates to player earnings and popularity.
+
 ## Research Question
+
+Our primary research question is: **what factors were associated with individual and team success throughout the 2025 season?**
+
+In this analysis, we present insightful ways of measuring and visualizing team and player performance. We incorporate machine learning for the purposes of determining the best predictors of game outcome and validating our summaries of player performance. We also explore the relationships between player performance and between salary and social media presence.
+
 
 ## Background
 
 ## Data
+
+Wehoop is an R package for analyzing women’s college and professional basketball data. It is a scraping and aggregating interface for ESPN’s women’s college basketball and WNBA statistics developed by Saiem Gilani and Geoff Hutchinson. In this analysis, we use wnba play-by-play, team box score, and player box score datasets from 2025. The play-by-play dataset (121,342 x 62) contains every play from every game. It has text explaining the type of play (layup, rebound, foul, substitution, free throw, etc.) and players involved. It also has timestamps, player coordinates, and basic game information. The team box score dataset (624 x 57) has information about team performance for every game, including total shots attempted and made, fouls, rebounds, turnovers, and more. It also contains useful information for creating visualizations such as team colors and logos. The player box score dataset (7,140 x 57) contains similar in-game statistics as the team box score dataset but broken down by individual. It also has basic player information including position and whether or not the player is a starter. Across all datasets, very little cleaning was required apart from the removal of the All Star game.
 
 ```{r}
 # load necessary packages
@@ -24,14 +33,14 @@ library(factoextra)
 library(reshape2)
 library(knitr)
 library(kableExtra)
-```
 
-```{r}
 # load wehoop data
 wnba_pbp <- wehoop::load_wnba_pbp()
 wnba_team_box <- wehoop::load_wnba_team_box()
 wnba_player_box <- wehoop::load_wnba_player_box()
 ```
+
+Salary information for each player was scraped from herhoopstats.com and assembled into a dataframe (255 x 5). The information was independently sourced by Richard Cohen. To retrieve the data, we created a function that iterates through each team’s 2025 Salary Cap Sheet page and extracts the player name, team name, salary value, and contract type. The data had to be cleaned so that it was fit for analysis and could be joined with other datasets. Missing values were populated with NA and categories were collapsed and recoded. Additionally, some players had multiple contracts with the same or different teams, which was addressed on a case by case basis in later analysis. 
 
 ```{r}
 # scrape herhoopstats.com for salary data
@@ -134,11 +143,13 @@ salary_df <- salary_df %>%
 
 ## Analysis and Insights
 
-
-
 #### Team Performance
 
+We began our analysis by looking into team performance, identifying the strongest and weakest teams in the league.
+
 ###### Season records
+
+As a starting point, we made a visualization of the progression of each team's record, represented by cumulative wins, over the course of the season. This provides insight into how team's performed relative to each other at each point in the season, information that cannot be derived from their records alone. A grey dashed line was added to mark the end of the regular season and beginning of the playoffs. The lines for each team end at varying points, depending on if they made the playoffs and when they were eliminated. 
 
 ```{r}
 # determine records for each team
@@ -191,7 +202,11 @@ ggplot(wnba_team_records, aes(x = game_date, y = cumulative_wins,
     size = 2.5, hjust = 1)
 ```
 
+This plot shows that the Minnesota Lynx had the best record throughout the regular season as they were consistently gapping the rest of the league in wins. Despite their winning record, the Lynx were eliminated in the semi-finals of the playoffs. The Las Vegas Aces struggled in the first half of the season but then went on a massive winning streak which took them to the championships. A few teams, the Connecticut Sun, Chicago Sky, and Dallas Wings, were consistently at the bottom of the standings and did not qualify for the playoffs.
+
 ###### Game Margins
+
+As a way of investigating what factors contribute to the success of dominant teams and downfall of weaker teams, game margins were calculated for various statistics, including field goals, free throws, three pointers, turnovers, and fouls. For example, if a team made two more field goals than their opponent in a game, that would be a margin of +2. If they had one less turnover than their opponent, that would be -1. The averages of these margins across all games were calculated for each team, providing a window into how they typically match up against opponents.
 
 ```{r}
 # determine game margins for different performance stats
@@ -258,9 +273,16 @@ ggplot(margin_avgs_pivoted, aes(x = margin_type, y = margin_value, fill = margin
       "avg_three_margin" = "Three Pointers", "avg_turnover_margin" = "Turnovers", 
       "avg_foul_margin" = "Fouls"))
 ```
+
+These bar plots show that the best teams in the league, such as the Lynx, Aces, Dream, and Mercury generally have positive scoring margins and lower or negative turnover and foul margins. The worst teams in the league, such as the Sun, Sky, and Wings display the opposite trends. This suggests that the abilities of a team to outscore and play cleaner basketball than their opponents are strong determinants of their success in the WNBA.
+
 ###### Predicting Season Outcomes
 
-```{r}
+Machine learning algorithms provide another technique for determining factors that contribute to team success. We built a classification model of game outcome (win or loss) using LASSO, an algorithm which shrinks coefficients toward 0. By kicking out predictors, LASSO helps identify the features that are most important to our model.
+
+We trained our LASSO model on all of the regular season games, and tested it on the playoff games.
+
+```{r, results='hide'}
 # remove columns that are unnecessary for predicting game outcomes
 wnba_team_lasso <- wnba_team_box %>%
   # filter out all star game
@@ -341,6 +363,11 @@ multiple_models %>%
   collect_metrics() %>%
   filter(penalty == parsimonious_param$penalty)
 ```
+The predictors used in our final model include assists, blocks, defensive rebounds, field goal percent, flagrant fouls, fouls, free throws made, largest lead, steals, three point field goals made, total rebounds, turnover points, turnovers, Lynx, and Wings. 
+
+Fouls and turnovers both had negative coefficients, meaning they decrease the odds of a team winning, which supports our insights from the previous visualization.
+
+Our final model had a lambda value of 0.027 and a cross-validated accuracy of 0.87. This means that our model correctly predicts the game outcome for 86.61% of new games.
 
 ```{r}
 # use model to predict playoff game outcomes
@@ -353,7 +380,7 @@ test_confusion <- final_model %>%
   conf_mat(truth = team_winner, estimate = .pred_class)
 
 # print metrics
-summary(test_confusion, event_level = "second")
+# summary(test_confusion, event_level = "second")
 
 # represent confusion matrix as mosaic plot
 test_confusion %>% 
@@ -363,6 +390,8 @@ test_confusion %>%
   labs(title = "Confusion Matrix for Playoff Win Predictions") +
   scale_fill_manual(values = c("#3c286e","#f05023")) 
 ```
+
+Our model correctly predicted the outcomes of the playoff games 79.17% of the time. As seen in the confusion matrix above, the model correctly predicted wins (true) and losses (false) in similar proportions. Almost all of the outcomes incorrectly predicted by the model were games in which a team with a massive lead ended up losing. For example, in the second game of the Lynx-Mercury semi-finals series, the Lynx were up by 20 at one point, but ended up losing. The model incorrectly predicted that the Lynx won this game. This demonstrates that although the variables outlined above are generally strong predictors of team success, upsets can happen.
 
 #### Individual Performance
 
