@@ -158,5 +158,3 @@ player_sd_stats <- player_stats %>%
   select(c(athlete_display_name, overall_impact))
 player_sd_stats
 ```
-
-
