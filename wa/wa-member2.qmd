@@ -8,7 +8,9 @@ library(ggplot2)
 ```
 
 ```{r}
-wnba_team_box <- load_wnba_team_box()
+wnba_pbp <- wehoop::load_wnba_pbp()
+wnba_team_box <- wehoop::load_wnba_team_box()
+wnba_player_box <- wehoop::load_wnba_player_box()
 
 top_players <- wnba_player_box %>%
   filter(game_id != 401781604) %>%

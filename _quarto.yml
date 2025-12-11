@@ -46,7 +46,7 @@ book:
 
   sidebar:
     title: "Data Science Ballers"
-    logo: assets/sidebar-logo.png
+    logo: assets/wnba_logo.png
     logo-alt: "Random negative space illustration"
     collapse-level: 2
     style: "docked"

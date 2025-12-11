@@ -4,7 +4,7 @@ title: "Performance Analysis of the 2025 WNBA Season"
 
 ## Motivation
 
-In 2019, women made up 44% of all sports participants, but received less than 5% of sports media coverage and less than 1% of total sports sponsorship dollars.
+In 2019, women made up 44% of all sports participants, but received less than 5% of sports media coverage and less than 1% of total sports sponsorship dollars ([Togethxr](https://www.togethxr.com/blogs/guides/the-growth-of-womens-sports?srsltid=AfmBOopvOkm4zPS1j8-e_HXHZyQNFjiH1noGQqqb7Bg6rkafPyxxzZE_)).
 In recent years, however, women’s sports have experienced a rapid rise in popularity.
 This has coincided with the growth of the Women’s National Basketball Association (WNBA).
 The 2025 season set new records for both attendance and viewership.
@@ -14,6 +14,10 @@ However, there is still work to be done.
 Although the WNBA is receiving more attention, athletes aren't being compensated at an equivalent rate.
 Players, uniting under slogans like "Pay Us What You Owe Us," are demanding a larger cut of the league's increased media revenue.
 As student-athletes, we were interested in exploring the 2025 WNBA season, analyzing performance at the team and individual levels and how it relates to player earnings and popularity.
+
+![](figures/valks_fans.jpg){fig-align="center"}
+
+<center>Passionate fans of the Golden State Valkyries whose inaugural season was 2025 ([Beth LaBerge/KQED](https://www.kqed.org/news/12056563/better-than-i-ever-dreamed-valkyries-fans-reflect-on-historic-first-season)).</center>
 
 ## Research Question
 
@@ -88,7 +92,7 @@ wnba_team_box <- wehoop::load_wnba_team_box()
 wnba_player_box <- wehoop::load_wnba_player_box()
 ```
 
-Salary information for each player was scraped from herhoopstats.com and assembled into a dataframe (255 x 5).
+Salary information for each player was scraped from [herhoopstats.com](https://herhoopstats.com/salary-cap-sheet/wnba/team/2025/atlanta-dream-11eaecc7-356c-1364-b611-2362f5011b0b/) and assembled into a dataframe (255 x 5).
 The information was independently sourced by Richard Cohen.
 To retrieve the data, we created a function that iterates through each team’s 2025 Salary Cap Sheet page and extracts the player name, team name, salary value, and contract type.
 The data had to be cleaned so that it was fit for analysis and could be joined with other datasets.
@@ -190,7 +194,7 @@ salary_df <- salary_df %>%
 ```
 
 Social media popularity was measured by considering the number of Instagram followers each player has.
-We scraped revoltv.com to create a 10 by 2 dataframe of the top 10 most followed players and their follower count.
+We scraped [revoltv.com](https://www.revolt.tv/article/wnba-players-with-the-most-instagram-followers) to create a 10 by 2 dataframe of the top 10 most followed players and their follower count.
 The data had to be cleaned to extract the players’ names and total number of followers.
 For players not in the top 10 most followed list, we manually added their follower count by looking up their accounts on the app.
 
@@ -512,7 +516,7 @@ It includes both offensive and defensive metrics and balance positive impacts ag
 10 is considered to be a solid PIE score.
 The equation used to calculate PIE can be seen below.
 
-![](figures/PIE_eq.png){fig-align="center"} 
+![](figures/PIE_eq.png){fig-align="center"}
 
 We calculated PIE for each player in every game and then calculated the season average for each player.
 The players with the 10 highest season average PIE scores are listed below.
@@ -828,8 +832,43 @@ This suggests that where a player's college career falls on the timeline of wome
 
 ## Conclusions
 
-Our exploration of team performance, individual performance, and player earnings and recognition has provided valuable insights into the factors that contributed to the the success of teams and players during the 2025 WNBA season. We found that the abilities of a team to outscore and play cleaner basketball than their opponents are strong determinants of their success. Game outcomes can be predicted with reasonable accuracy based on a combination of positive metrics that increase the likelihood of winning such as shots made, rebounds, blocks, as well as negative metric including turnovers and fouls. The most successful teams also had some of the overall league's most impactful players, which can be determined using the comprehensive Player Impact Estimate (PIE) metric. We found that the relationship between player performance and earnings and recognition is complicated. Typically, only players who have been in the league for many years experience salary increases with stronger performance. However, these veteran players may actually be making less overall than their younger, less experienced counterparts. Individual brand deals are becoming increasingly more lucrative. Because popularity is a primary factor in securing brand deals, many of the league's younger players who have developed under the growing spotlight on women's basketball and benefited from Name, Image, and Likeness (NIL) deals in college, are having better success tracking down endorsements in the WNBA. This discrepancy in earnings underscores the importance of player demands for a larger share of league revenues and more equitable compensation.
+Our exploration of team performance, individual performance, and player earnings and recognition has provided valuable insights into the factors that contributed to the the success of teams and players during the 2025 WNBA season.
+We found that the abilities of a team to outscore and play cleaner basketball than their opponents are strong determinants of their success.
+Game outcomes can be predicted with reasonable accuracy based on a combination of positive metrics that increase the likelihood of winning such as shots made, rebounds, blocks, as well as negative metric including turnovers and fouls.
+The most successful teams also had some of the overall league's most impactful players, which can be determined using the comprehensive Player Impact Estimate (PIE) metric.
+We found that the relationship between player performance and earnings and recognition is complicated.
+Typically, only players who have been in the league for many years experience salary increases with stronger performance.
+However, these veteran players may actually be making less overall than their younger, less experienced counterparts.
+Individual brand deals are becoming increasingly more lucrative.
+Because popularity is a primary factor in securing brand deals, many of the league's younger players who have developed under the growing spotlight on women's basketball and benefited from Name, Image, and Likeness (NIL) deals in college, are having better success tracking down endorsements in the WNBA.
+This discrepancy in earnings underscores the importance of player demands for a larger share of league revenues and more equitable compensation.
 
 ![](figures/pay_players.png){fig-align="center"}
 
+<center>Minnesota Lynx player, Napheesa Collier, has been a key voice in league negotiations for more equitable compensation ([reddit](https://www.reddit.com/r/wnba/comments/1m5qgzy/pay_us_what_you_owe_us_so_what_will_the_wnba_owe/)).</center>
+
 ## Limitations and Future Work
+
+The Wehoops datasets were clean, and they had ample information that captured the complexity of explaining basketball performance.
+One limitation is that we were only given data for the 2025 season making it difficult to draw general conclusions about what success in basketball really means for teams and across players’ careers.
+Another limitation is that salary alone does not capture how much a player makes from their career, as brand deals are a common way that players create income.
+These means of income are often correlated with a player’s popularity.
+Measuring popularity is also a difficult process on its own.
+In our report, we do this using the number of Instagram followers a player has, however, this poses another limitation as followers are not the only thing that represents popularity.
+
+In the future, it would be ideal to look at and compare multiple seasons.
+It also would be interesting to look at what different players’ and teams’ general playing styles are, and how that can impact their success.
+Factors such as the speed at which a team plays, how often they rotate players in and out, what sort of plays they run, and other factors that are not as easily quantified.
+
+Also, we found that there are many aspects other than performance that can affect popularity and salary, such as the type of contract and overall changes of popularity of the sport at different points in each player’s career.
+Additionally, the player performance vs. popularity percentile plot revealed some interesting grouping.
+Most of the players in the bottom right quadrant, who we concluded are receiving more recognition than is “deserved” based on PIE alone, are younger and white.
+On the other hand, the players in the top left quadrant, who we identified as under-rated based on PIE and followers, are mostly older and black.
+This drove us to consider a question that went beyond the scope of our current project, but nonetheless is very interesting: Are there any confounding social factors, such as race, conventional beauty standards, controversy, political opinions, and sexuality, that impact popularity and pay?
+Overall, while our report is a comprehensive review of the 2025 season, measuring performance and success in many aspects, there is so much more to explore with this topic.
+
+## Presentation Recording and Slides
+
+{{< video WNBAPerformance.mp4 >}}
+
+<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vQfVAO3-2c9-LpSevVm4AELo_SMsz96CF2Uz2sqIM5PjQ4-WBb-4oTy0zrtWJjX4t314fgLDK97xRZR/pubembed?start=false&loop=false&delayms=10000" frameborder="0" width="480" height="299" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
