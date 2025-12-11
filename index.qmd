@@ -4,34 +4,67 @@ title: "Performance Analysis of the 2025 WNBA Season"
 
 ## Motivation
 
-In 2019, women made up 44% of all sports participants, but received less than 5% of sports media coverage and less than 1% of total sports sponsorship dollars. In recent years, however, women’s sports have experienced a rapid rise in popularity. This has coincided with the growth of the Women’s National Basketball Association (WNBA). The 2025 season set new records for both attendance and viewership. The league, which currently consists of 13 teams, has announced that it plans to expand to 18 teams by 2030. The growth of the WNBA has also created new opportunities for women off the court with more women occupying positions as media commentators, analysts, coaches, and executives. However, there is still work to be done. Although the WNBA is receiving more attention, athletes aren't being compensated at an equivalent rate. Players, uniting under slogans like "Pay Us What You Owe Us," are demanding a larger cut of the league's increased media revenue. As student-athletes, we were interested in exploring the 2025 WNBA season, analyzing performance at the team and individual levels and how it relates to player earnings and popularity.
+In 2019, women made up 44% of all sports participants, but received less than 5% of sports media coverage and less than 1% of total sports sponsorship dollars.
+In recent years, however, women’s sports have experienced a rapid rise in popularity.
+This has coincided with the growth of the Women’s National Basketball Association (WNBA).
+The 2025 season set new records for both attendance and viewership.
+The league, which currently consists of 13 teams, has announced that it plans to expand to 18 teams by 2030.
+The growth of the WNBA has also created new opportunities for women off the court with more women occupying positions as media commentators, analysts, coaches, and executives.
+However, there is still work to be done.
+Although the WNBA is receiving more attention, athletes aren't being compensated at an equivalent rate.
+Players, uniting under slogans like "Pay Us What You Owe Us," are demanding a larger cut of the league's increased media revenue.
+As student-athletes, we were interested in exploring the 2025 WNBA season, analyzing performance at the team and individual levels and how it relates to player earnings and popularity.
 
 ## Research Question
 
-Our primary research question is: **what factors were associated with individual and team success throughout the 2025 season?**
+Our primary research question is: **what factors were associated with individual and team success throughout the 2025 WNBA season?**
 
-In this analysis, we present insightful ways of measuring and visualizing team and player performance. We incorporate machine learning for the purposes of determining the best predictors of game outcome and validating our summaries of player performance. We also explore the relationships between player performance and between salary and social media presence.
-
+In this analysis, we present insightful ways of measuring and visualizing team and player performance.
+We incorporate machine learning for the purposes of determining the best predictors of game outcome and validating our summaries of player performance.
+We also explore the relationships between player performance and between salary and social media presence.
 
 ## Background
 
-The WNBA is the professional women’s basketball league in the United States. There are 13 teams in the WNBA, and there are 12 rostered players (players that are actively playing) on each team. The entire league is split into two conferences, the Eastern and Western Conferences. Every team plays 44 games in a regular season, most games against teams in their conference but some outside. 
-After the regular season ends, the best teams move onto an elimination tournament called the playoffs. The playoffs include the top 8 teams in either conference, based on win-loss record. These teams compete in a series of games where losing teams are gradually eliminated until only one remains. The final winner is crowned the WNBA champion. 
+The WNBA is the professional women’s basketball league in the United States.
+There are 13 teams in the WNBA, and there are 12 rostered players (players that are actively playing) on each team.
+The entire league is split into two conferences, the Eastern and Western Conferences.
+Every team plays 44 games in a regular season, most games against teams in their conference but some outside.
+After the regular season ends, the best teams move onto an elimination tournament called the playoffs.
+The playoffs include the top 8 teams in either conference, based on win-loss record.
+These teams compete in a series of games where losing teams are gradually eliminated until only one remains.
+The final winner is crowned the WNBA champion.
 
 Because our project analyzes team and individual performance, it is important to understand the common statistics that help measure performance:
-Points per game (PPG): total number of points scored per game
-Shots: total number of shots taken, including missed shots
-Assists: passes made that directly led to a point scored
-Blocks: blocking and opponents shot to prevent a point
-Steals: taking the ball away from the opponent before they can take a shot
-Rebounds: gaining possession of the ball after a missed shot (offensive or defensive)
-Turnovers: the opposite of steals; losing the ball to the opponent before they take a shot 
-Record: this is the total amount of wins and losses that a team accumulates
 
+-   Points per game (PPG): total number of points scored per game
+
+-   Shots: total number of shots taken, including missed shots
+
+-   Assists: passes made that directly led to a point scored
+
+-   Blocks: blocking and opponents shot to prevent a point
+
+-   Steals: taking the ball away from the opponent before they can take a shot
+
+-   Rebounds: gaining possession of the ball after a missed shot (offensive or defensive)
+
+-   Turnovers: the opposite of steals; losing the ball to the opponent before they take a shot
+
+-   Record: this is the total amount of wins and losses that a team accumulates
 
 ## Data
 
-Wehoop is an R package for analyzing women’s college and professional basketball data. It is a scraping and aggregating interface for ESPN’s women’s college basketball and WNBA statistics developed by Saiem Gilani and Geoff Hutchinson. In this analysis, we use wnba play-by-play, team box score, and player box score datasets from 2025. The play-by-play dataset (121,342 x 62) contains every play from every game. It has text explaining the type of play (layup, rebound, foul, substitution, free throw, etc.) and players involved. It also has timestamps, player coordinates, and basic game information. The team box score dataset (624 x 57) has information about team performance for every game, including total shots attempted and made, fouls, rebounds, turnovers, and more. It also contains useful information for creating visualizations such as team colors and logos. The player box score dataset (7,140 x 57) contains similar in-game statistics as the team box score dataset but broken down by individual. It also has basic player information including position and whether or not the player is a starter. Across all datasets, very little cleaning was required apart from the removal of the All Star game.
+Wehoop is an R package for analyzing women’s college and professional basketball data.
+It is a scraping and aggregating interface for ESPN’s women’s college basketball and WNBA statistics developed by Saiem Gilani and Geoff Hutchinson.
+In this analysis, we use wnba play-by-play, team box score, and player box score datasets from 2025.
+The play-by-play dataset (121,342 x 62) contains every play from every game.
+It has text explaining the type of play (layup, rebound, foul, substitution, free throw, etc.) and players involved.
+It also has timestamps, player coordinates, and basic game information.
+The team box score dataset (624 x 57) has information about team performance for every game, including total shots attempted and made, fouls, rebounds, turnovers, and more.
+It also contains useful information for creating visualizations such as team colors and logos.
+The player box score dataset (7,140 x 57) contains similar in-game statistics as the team box score dataset but broken down by individual.
+It also has basic player information including position and whether or not the player is a starter.
+Across all datasets, very little cleaning was required apart from the removal of the All Star game.
 
 ```{r}
 # load necessary packages
@@ -55,7 +88,12 @@ wnba_team_box <- wehoop::load_wnba_team_box()
 wnba_player_box <- wehoop::load_wnba_player_box()
 ```
 
-Salary information for each player was scraped from herhoopstats.com and assembled into a dataframe (255 x 5). The information was independently sourced by Richard Cohen. To retrieve the data, we created a function that iterates through each team’s 2025 Salary Cap Sheet page and extracts the player name, team name, salary value, and contract type. The data had to be cleaned so that it was fit for analysis and could be joined with other datasets. Missing values were populated with NA and categories were collapsed and recoded. Additionally, some players had multiple contracts with the same or different teams, which was addressed on a case by case basis in later analysis. 
+Salary information for each player was scraped from herhoopstats.com and assembled into a dataframe (255 x 5).
+The information was independently sourced by Richard Cohen.
+To retrieve the data, we created a function that iterates through each team’s 2025 Salary Cap Sheet page and extracts the player name, team name, salary value, and contract type.
+The data had to be cleaned so that it was fit for analysis and could be joined with other datasets.
+Missing values were populated with NA and categories were collapsed and recoded.
+Additionally, some players had multiple contracts with the same or different teams, which was addressed on a case by case basis in later analysis.
 
 ```{r}
 # scrape herhoopstats.com for salary data
@@ -151,7 +189,10 @@ salary_df <- salary_df %>%
   mutate(across(where(is.numeric), ~ ifelse(is.nan(.), NA, .)))
 ```
 
-Social media popularity was measured by considering the number of Instagram followers each player has. We scraped revoltv.com to create a 10 by 2 dataframe of the top 10 most followed players and their follower count. The data had to be cleaned to extract the players’ names and total number of followers. For players not in the top 10 most followed list, we manually added their follower count by looking up their accounts on the app.
+Social media popularity was measured by considering the number of Instagram followers each player has.
+We scraped revoltv.com to create a 10 by 2 dataframe of the top 10 most followed players and their follower count.
+The data had to be cleaned to extract the players’ names and total number of followers.
+For players not in the top 10 most followed list, we manually added their follower count by looking up their accounts on the app.
 
 ```{r}
 # social media data
@@ -193,7 +234,10 @@ We began our analysis by looking into team performance, identifying the stronges
 
 ###### Season records
 
-As a starting point, we made a visualization of the progression of each team's record, represented by cumulative wins, over the course of the season. This provides insight into how team's performed relative to each other at each point in the season, information that cannot be derived from their records alone. A grey dashed line was added to mark the end of the regular season and beginning of the playoffs. The lines for each team end at varying points, depending on if they made the playoffs and when they were eliminated. 
+As a starting point, we made a visualization of the progression of each team's record, represented by cumulative wins, over the course of the season.
+This provides insight into how team's performed relative to each other at each point in the season, information that cannot be derived from their records alone.
+A grey dashed line was added to mark the end of the regular season and beginning of the playoffs.
+The lines for each team end at varying points, depending on if they made the playoffs and when they were eliminated.
 
 ```{r}
 # determine records for each team
@@ -246,11 +290,17 @@ ggplot(wnba_team_records, aes(x = game_date, y = cumulative_wins,
     size = 2.5, hjust = 1)
 ```
 
-This plot shows that the Minnesota Lynx had the best record throughout the regular season as they were consistently gapping the rest of the league in wins. Despite their winning record, the Lynx were eliminated in the semi-finals of the playoffs. The Las Vegas Aces struggled in the first half of the season but then went on a massive winning streak which took them to the championships. A few teams, the Connecticut Sun, Chicago Sky, and Dallas Wings, were consistently at the bottom of the standings and did not qualify for the playoffs.
+This plot shows that the Minnesota Lynx had the best record throughout the regular season as they were consistently gapping the rest of the league in wins.
+Despite their winning record, the Lynx were eliminated in the semi-finals of the playoffs.
+The Las Vegas Aces struggled in the first half of the season but then went on a massive winning streak which took them to the championships.
+A few teams, the Connecticut Sun, Chicago Sky, and Dallas Wings, were consistently at the bottom of the standings and did not qualify for the playoffs.
 
 ###### Game Margins
 
-As a way of investigating what factors contribute to the success of dominant teams and downfall of weaker teams, game margins were calculated for various statistics, including field goals, free throws, three pointers, turnovers, and fouls. For example, if a team made two more field goals than their opponent in a game, that would be a margin of +2. If they had one less turnover than their opponent, that would be -1. The averages of these margins across all games were calculated for each team, providing a window into how they typically match up against opponents.
+As a way of investigating what factors contribute to the success of dominant teams and downfall of weaker teams, game margins were calculated for various statistics, including field goals, free throws, three pointers, turnovers, and fouls.
+For example, if a team made two more field goals than their opponent in a game, that would be a margin of +2.
+If they had one less turnover than their opponent, that would be -1.
+The averages of these margins across all games were calculated for each team, providing a window into how they typically match up against opponents.
 
 ```{r}
 # determine game margins for different performance stats
@@ -318,11 +368,15 @@ ggplot(margin_avgs_pivoted, aes(x = margin_type, y = margin_value, fill = margin
       "avg_foul_margin" = "Fouls"))
 ```
 
-These bar plots show that the best teams in the league, such as the Lynx, Aces, Dream, and Mercury generally have positive scoring margins and lower or negative turnover and foul margins. The worst teams in the league, such as the Sun, Sky, and Wings display the opposite trends. This suggests that the abilities of a team to outscore and play cleaner basketball than their opponents are strong determinants of their success in the WNBA.
+These bar plots show that the best teams in the league, such as the Lynx, Aces, Dream, and Mercury generally have positive scoring margins and lower or negative turnover and foul margins.
+The worst teams in the league, such as the Sun, Sky, and Wings display the opposite trends.
+This suggests that the abilities of a team to outscore and play cleaner basketball than their opponents are strong determinants of their success in the WNBA.
 
 ###### Predicting Season Outcomes
 
-Machine learning algorithms provide another technique for determining factors that contribute to team success. We built a classification model of game outcome (win or loss) using LASSO, an algorithm which shrinks coefficients toward 0. By kicking out predictors, LASSO helps identify the features that are most important to our model.
+Machine learning algorithms provide another technique for determining factors that contribute to team success.
+We built a classification model of game outcome (win or loss) using LASSO, an algorithm which shrinks coefficients toward 0.
+By kicking out predictors, LASSO helps identify the features that are most important to our model.
 
 We trained our LASSO model on all of the regular season games, and tested it on the playoff games.
 
@@ -407,13 +461,15 @@ multiple_models %>%
   collect_metrics() %>%
   filter(penalty == parsimonious_param$penalty)
 ```
-The predictors included in our final model and their coefficients can be seen in the equation below. 
+
+The predictors included in our final model and their coefficients can be seen in the equation below.
 
 ![](figures/LASSO_eq.png){fig-align="center"}
 
 Fouls and turnovers both had negative coefficients, meaning they decrease the odds of a team winning, which supports our insights from the previous visualization.
 
-Our final model had a lambda value of 0.027 and a cross-validated accuracy of 0.87. This means that our model correctly predicts the game outcome for 86.61% of new games.
+Our final model had a lambda value of 0.027 and a cross-validated accuracy of 0.87.
+This means that our model correctly predicts the game outcome for 86.61% of new games.
 
 ```{r}
 # use model to predict playoff game outcomes
@@ -437,18 +493,29 @@ test_confusion %>%
   scale_fill_manual(values = c("#3c286e","#f05023")) 
 ```
 
-Our model correctly predicted the outcomes of the playoff games 79.17% of the time. As seen in the confusion matrix above, the model correctly predicted wins (true) and losses (false) in similar proportions. Almost all of the outcomes incorrectly predicted by the model were games in which a team with a massive lead ended up losing. For example, in the second game of the Lynx-Mercury semi-finals series, the Lynx were up by 20 at one point, but ended up losing. The model incorrectly predicted that the Lynx won this game. This demonstrates that although the variables outlined above are generally strong predictors of team success, upsets can happen.
+Our model correctly predicted the outcomes of the playoff games 79.17% of the time.
+As seen in the confusion matrix above, the model correctly predicted wins (true) and losses (false) in similar proportions.
+Almost all of the outcomes incorrectly predicted by the model were games in which a team with a massive lead ended up losing.
+For example, in the second game of the Lynx-Mercury semi-finals series, the Lynx were up by 20 at one point, but ended up losing.
+The model incorrectly predicted that the Lynx won this game.
+This demonstrates that although the variables outlined above are generally strong predictors of team success, upsets can happen.
 
 #### Individual Performance
 
-Season outcomes and team performance stem from the performance of individual players. In the next component of our analysis, we developed and validated a metric for determining the best players in the league.
+Season outcomes and team performance stem from the performance of individual players.
+In the next component of our analysis, we developed and validated a metric for determining the best players in the league.
 
 ###### Player Impact Estimate
 
-Player Impact Estimate (PIE) is a performance metric developed by the NBA to evaluate a player's contribution to their team's success in a specific basketball game. It includes both offensive and defensive metrics and balance positive impacts against negative impacts. 10 is considered to be a solid PIE score. The equation used to calculate PIE can be seen below.
+Player Impact Estimate (PIE) is a performance metric developed by the NBA to evaluate a player's contribution to their team's success in a specific basketball game.
+It includes both offensive and defensive metrics and balance positive impacts against negative impacts.
+10 is considered to be a solid PIE score.
+The equation used to calculate PIE can be seen below.
 
-![](figures/PIE_eq.png){fig-align="center"}
-We calculated PIE for each player in every game and then calculated the season average for each player. The players with the 10 highest season average PIE scores are listed below.
+![](figures/PIE_eq.png){fig-align="center"} 
+
+We calculated PIE for each player in every game and then calculated the season average for each player.
+The players with the 10 highest season average PIE scores are listed below.
 
 ```{r}
 # calculate game totals for PIE metric calculation
@@ -512,7 +579,9 @@ top10_pie %>%
 
 ###### Principle Component Analysis
 
-As an alternative method of assessing player performance, we used principle component analysis (PCA), a machine learning technique for reducing the dimensionality of data. It turns a set of correlated features into a smaller set of uncorrelated features, called principal components (PCs), which preserve the majority of information in the data. This is useful for analysis as we have many in-game stats that could be used to determine player performance.
+As an alternative method of assessing player performance, we used principle component analysis (PCA), a machine learning technique for reducing the dimensionality of data.
+It turns a set of correlated features into a smaller set of uncorrelated features, called principal components (PCs), which preserve the majority of information in the data.
+This is useful for analysis as we have many in-game stats that could be used to determine player performance.
 
 ```{r}
 # prepare player dataset for PCA
@@ -582,7 +651,9 @@ melt(pca_results$rotation) %>%
     theme(legend.position = "none", axis.text.x = element_text(angle = 90, hjust = 1)) 
 ```
 
-The first PC captures the most variability in the data. As seen in this bar chart, the original features that contributed the most to PC1 are in-game statistics, such as shooting percentages and rebounds. This suggests that PC1 is mainly a summary of player performance.
+The first PC captures the most variability in the data.
+As seen in this bar chart, the original features that contributed the most to PC1 are in-game statistics, such as shooting percentages and rebounds.
+This suggests that PC1 is mainly a summary of player performance.
 
 ```{r}
 # plot PC1 scores (x-axis) vs PC2 scores (y-axis) of all data points and color by PIE
@@ -611,7 +682,9 @@ p2 <- ggplot(pca_df, aes(x = x, y = y)) +
 # Convert to interactive plotly with hover
 ggplotly(p2, tooltip = "text")
 ```
-PC1 (x-axis) is well aligned with PIE and players with high PC1 scores also tend to have high PIE scores. This validates our use of PIE as a robust and holistic measure of player performance.
+
+PC1 (x-axis) is well aligned with PIE and players with high PC1 scores also tend to have high PIE scores.
+This validates our use of PIE as a robust and holistic measure of player performance.
 
 #### Performance and Success
 
@@ -671,11 +744,15 @@ p <- ggplot(player_salary_stats, aes(x = avg_PIE, y = salary_thousands, color = 
 ggplotly(p, tooltip = "text")
 ```
 
-The relationship between player performance and salary appears to be strongest for protected veterans, experienced players with guaranteed salaries. The trends for unprotected and waived players also appear to be positive, but this may be due to the several high outliers. The flat slope for protected rookies makes sense given that their salaries are generally standardized. Players with 7-day or hardship contracts typically are only on the roster for a portion of the season, so their salaries also tend to be static.
+The relationship between player performance and salary appears to be strongest for protected veterans, experienced players with guaranteed salaries.
+The trends for unprotected and waived players also appear to be positive, but this may be due to the several high outliers.
+The flat slope for protected rookies makes sense given that their salaries are generally standardized.
+Players with 7-day or hardship contracts typically are only on the roster for a portion of the season, so their salaries also tend to be static.
 
 ###### Popularity and Performance
 
-As a measure of player popularity and recognition, we looked into the Instagram following of a subset of players. The most followed players on Instagram can be seen in the table below.
+As a measure of player popularity and recognition, we looked into the Instagram following of a subset of players.
+The most followed players on Instagram can be seen in the table below.
 
 ```{r}
 # players with top 10 highest PIEs
@@ -697,7 +774,10 @@ most_followers %>%
   kable_styling()
 ```
 
-Three of these players also appeared in the top ten PIE table. As a way of visualizing the relationship between player performance and social media following, the players with the 10 highest PIE scores and 10 highest Instagram followers were plotted with respect to their PIE and Instagram follower percentiles. A hype score was determined by calculating the difference between the two percentiles. Players in red are more popular relative to their performance while players in blue are less popular relative to their performance.
+Three of these players also appeared in the top ten PIE table.
+As a way of visualizing the relationship between player performance and social media following, the players with the 10 highest PIE scores and 10 highest Instagram followers were plotted with respect to their PIE and Instagram follower percentiles.
+A hype score was determined by calculating the difference between the two percentiles.
+Players in red are more popular relative to their performance while players in blue are less popular relative to their performance.
 
 ```{r}
 # join PIE and follower datasets
@@ -740,8 +820,16 @@ ggplot(final_dataset, aes(x = follower_pct, y = PIE_pct, color = hype_score)) +
     color = "Hype Score") + 
   theme_minimal()
 ```
-Several of the players in the bottom right quadrant of the plot with positive hype scores, including Paige Bueckers, Angel Reese, Caitlin Clark, Cameron Brink, and Hailey Van Lith are young players who have played in the WNBA for two or less years. These athletes were also some of the most popular college players. Apart from Aliyah Boston, the players with negative hype scores are all veterans who have been in the league since before it began to grow in popularity. This suggests that where a player's college career falls on the timeline of women's basketball's growth has a greater bearing on their recognition and popularity than their performance in the league.
+
+Several of the players in the bottom right quadrant of the plot with positive hype scores, including Paige Bueckers, Angel Reese, Caitlin Clark, Cameron Brink, and Hailey Van Lith are young players who have played in the WNBA for two or less years.
+These athletes were also some of the most popular college players.
+Apart from Aliyah Boston, the players with negative hype scores are all veterans who have been in the league since before it began to grow in popularity.
+This suggests that where a player's college career falls on the timeline of women's basketball's growth has a greater bearing on their recognition and popularity than their performance in the league.
 
 ## Conclusions
+
+Our exploration of team performance, individual performance, and player earnings and recognition has provided valuable insights into the factors that contributed to the the success of teams and players during the 2025 WNBA season. We found that the abilities of a team to outscore and play cleaner basketball than their opponents are strong determinants of their success. Game outcomes can be predicted with reasonable accuracy based on a combination of positive metrics that increase the likelihood of winning such as shots made, rebounds, blocks, as well as negative metric including turnovers and fouls. The most successful teams also had some of the overall league's most impactful players, which can be determined using the comprehensive Player Impact Estimate (PIE) metric. We found that the relationship between player performance and earnings and recognition is complicated. Typically, only players who have been in the league for many years experience salary increases with stronger performance. However, these veteran players may actually be making less overall than their younger, less experienced counterparts. Individual brand deals are becoming increasingly more lucrative. Because popularity is a primary factor in securing brand deals, many of the league's younger players who have developed under the growing spotlight on women's basketball and benefited from Name, Image, and Likeness (NIL) deals in college, are having better success tracking down endorsements in the WNBA. This discrepancy in earnings underscores the importance of player demands for a larger share of league revenues and more equitable compensation.
+
+![](figures/pay_players.png){fig-align="center"}
 
 ## Limitations and Future Work
