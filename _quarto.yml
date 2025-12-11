@@ -63,14 +63,12 @@ book:
       chapters:
         - eda/eda-member1.qmd
         - eda/eda-member2.qmd
-        - eda/eda-member3.qmd
 
   appendices:
   - appx/proposal.qmd
   - appx/case-study.qmd
   - wa/wa-member1.qmd
   - wa/wa-member2.qmd
-  - wa/wa-member3.qmd
 
 
 

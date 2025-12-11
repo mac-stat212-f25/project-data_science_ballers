@@ -1,5 +1,937 @@
 ---
-title: "Member 1 First Name & Last Name Initial"
+title: "Cate S."
 ---
 
-Work area to try code
+```{r}
+library(wehoop)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+library(glmnet)
+library(tidymodels)
+tidymodels_prefer()
+library(robotstxt)
+library(rvest)
+library(factoextra)
+library(reshape2)
+library(rpart)
+library(rpart.plot)
+library(gt)
+library(knitr)
+library(kableExtra)
+
+wnba_pbp <- wehoop::load_wnba_pbp()
+wnba_team_box <- wehoop::load_wnba_team_box()
+wnba_player_box <- wehoop::load_wnba_player_box()
+```
+
+### Player Dataset
+
+```{r}
+# get dimensions
+dim(wnba_player_box)
+```
+
+```{r}
+# find the league's best players
+top_players <- wnba_player_box %>%
+  filter(game_id != 401781604) %>%
+  group_by(athlete_display_name, team_name) %>%
+  summarize(
+    avg_ppg = mean(points, na.rm = TRUE),
+    avg_blocks = mean(blocks, na.rm = TRUE),
+    avg_rebounds = mean((offensive_rebounds + defensive_rebounds), na.rm = TRUE),
+    avg_assists = mean(assists, na.rm = TRUE),
+    avg_steals = mean(steals, na.rm = TRUE),
+    )
+
+top_players %>%
+  arrange(desc(avg_ppg)) %>%
+  head(10) 
+```
+
+```{r}
+game_totals <- wnba_team_box %>%
+  filter(game_id != 401781604)%>%
+  group_by(game_id) %>%
+  summarize(
+    total_points = sum(team_score),
+    total_field_goals_made = sum(field_goals_made),
+    total_free_throws_made = sum(free_throws_made),
+    total_field_goals_attempted = sum(field_goals_attempted),
+    total_free_throws_attempted = sum(free_throws_attempted),
+    total_defensive_rebounds = sum(defensive_rebounds),
+    total_offensive_rebounds = sum(offensive_rebounds),
+    total_assists = sum(assists),
+    total_steals = sum(steals),
+    total_blocks = sum(blocks),
+    total_fouls = sum(fouls),
+    total_turnovers = sum(turnovers)
+  ) %>%
+  ungroup()
+
+player_game_totals <- wnba_player_box %>%
+  full_join(game_totals, by = "game_id") %>%
+  select("game_id", "game_date", "athlete_id", "athlete_display_name", "team_id", "team_name", "points", "field_goals_made", "free_throws_made", "field_goals_attempted", "free_throws_attempted", "defensive_rebounds", "offensive_rebounds", "assists", "steals", "blocks", "fouls", "turnovers", "total_points", "total_field_goals_made", "total_free_throws_made", "total_field_goals_attempted", "total_free_throws_attempted", "total_defensive_rebounds", "total_offensive_rebounds", "total_assists", "total_steals", "total_blocks", "total_fouls", "total_turnovers") %>%
+  group_by(game_id, game_date, athlete_id, athlete_display_name, team_id, team_name) %>%
+  summarize(player_PIE = ((points + field_goals_made + free_throws_made - field_goals_attempted - free_throws_attempted + defensive_rebounds + (offensive_rebounds/2) + assists + steals + (blocks/2) - fouls - turnovers) / (total_points + total_field_goals_made + total_free_throws_made - total_field_goals_attempted - total_free_throws_attempted + total_defensive_rebounds + (total_offensive_rebounds/2) + total_assists + total_steals + (total_blocks/2) - total_fouls - total_turnovers)) * 100) 
+
+top10_pie <- player_game_totals %>%
+  group_by(athlete_display_name, team_name) %>%
+  summarize(avg_PIE = mean(player_PIE, na.rm = TRUE)) %>%
+  arrange(desc(avg_PIE)) %>%
+  head(10) 
+
+top10_pie %>%
+  kable(
+    col.names = c("Player", "Team", "PIE"),
+    align = "lll"
+  ) %>%
+  kable_styling()
+
+player_game_totals %>%
+  filter(athlete_id%in%c("3149391", "2529140", "3917450", "2998928", "1068", "4432831", "4433730", "4433402",
+    "2566106", "4065870")) %>%
+  ggplot(aes(x = game_date, y = player_PIE, color = athlete_display_name)) + geom_line()
+```
+
+### Team Dataset
+
+```{r}
+# get dimensions
+dim(wnba_team_box)
+```
+
+```{r}
+# determine records for each team
+wnba_team_records <- wnba_team_box %>%
+  filter(team_name != "TEAM CLARK", team_name != "TEAM COLLIER") %>% # remove All Star teams
+  mutate(
+    win = ifelse(team_winner == TRUE, 1, 0),
+    loss = ifelse(team_winner == FALSE, 1, 0)
+  ) %>%
+  group_by(team_name) %>%
+  arrange(team_name, game_date) %>% 
+  mutate(
+    cumulative_wins = cumsum(win),
+    cumulative_losses = cumsum(loss),
+    record = paste0(cumulative_wins, "-", cumulative_losses),
+    win_pct = cumulative_wins/(cumulative_wins + cumulative_losses)
+  ) %>%
+  ungroup() %>%
+  mutate(team_color = paste0("#", team_color))
+```
+
+```{r}
+team_colors <- wnba_team_box %>%
+  distinct(team_name, team_color) %>%
+  mutate(team_color = paste0("#", team_color)) %>%
+  deframe()
+
+df_labels <- wnba_team_records %>%
+  group_by(team_name) %>%
+  filter(game_date == max(game_date)) %>%
+  ungroup() 
+```
+
+```{r}
+# visualize records
+ggplot(wnba_team_records, aes(x = game_date, y = cumulative_wins, 
+  group = team_name, color = team_color)) +
+  geom_line(size = 1.2) +
+  scale_color_identity() + 
+  geom_text_repel(
+    data = df_labels,
+    aes(label = team_name),
+    nudge_x = 3, 
+    hjust = 0,
+    direction = "y",
+    segment.color = NA, 
+    size = 3.5,
+    fontface = "bold"
+  ) +
+  theme_classic() +
+  expand_limits(x = max(wnba_team_records$game_date) + 12) +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = as.Date("2025-09-11"), 
+    linetype = "dashed", color = "darkgrey") +
+  labs(x = "", y = "cumulative wins") +
+  annotate("text", x = as.Date("2025-09-9"), y = 38, 
+    label = str_wrap("End of Regular Season", 15), color = "grey40", 
+    size = 2.5, hjust = 1)
+```
+
+```{r}
+# determine teams with the best avg shot percentages
+shot_percentages <- wnba_team_records %>%
+  select(field_goal_pct, free_throw_pct, three_point_field_goal_pct, team_name) %>%
+  group_by(team_name) %>%
+  summarise(
+    avg_field_goal = mean(field_goal_pct),
+    avg_free_throw = mean(free_throw_pct),
+    avg_three = mean(three_point_field_goal_pct),
+  )
+
+shot_percentages %>%
+  select(team_name, avg_field_goal) %>%
+  arrange(desc(avg_field_goal)) %>%
+  slice(1)
+
+shot_percentages %>%
+  select(team_name, avg_free_throw) %>%
+  arrange(desc(avg_free_throw)) %>%
+  slice(1)
+
+shot_percentages %>%
+  select(team_name, avg_three) %>%
+  arrange(desc(avg_three)) %>%
+  slice(1)
+```
+
+```{r}
+# determine game margins for different performance stats
+margins <- wnba_team_records %>%
+  group_by(game_id) %>%
+  mutate(
+    field_margin = field_goals_made - rev(field_goals_made),
+    free_margin = free_throws_made - rev(free_throws_made),
+    three_margin = three_point_field_goals_made - rev(three_point_field_goals_made),
+    turnover_margin = turnovers - rev(turnovers),
+    foul_margin = fouls - rev(fouls)
+  ) %>%
+  ungroup() %>%
+  select(game_id, team_name, field_margin, free_margin, three_margin, turnover_margin, foul_margin, cumulative_wins) %>%
+  arrange(game_id) 
+
+# calculate average margins by team
+margin_avgs <- margins %>%
+  group_by(team_name) %>%
+  summarize(
+    avg_field_margin = mean(field_margin),
+    avg_free_margin = mean(free_margin),
+    avg_three_margin = mean(three_margin),
+    avg_turnover_margin = mean(turnover_margin),
+    avg_foul_margin = mean(foul_margin),
+    cumulative_wins = max(cumulative_wins)
+  ) 
+
+margin_avgs_pivoted <- margin_avgs %>%
+  pivot_longer(
+    cols = c(avg_field_margin, avg_free_margin, avg_three_margin, avg_turnover_margin, avg_foul_margin),
+    names_to = "margin_type",
+    values_to = "margin_value"
+  ) %>%
+  mutate(
+    margin_type = fct_relevel(margin_type, "avg_field_margin", "avg_free_margin", "avg_three_margin", "avg_turnover_margin", "avg_foul_margin")
+  ) %>%
+  mutate(
+    team_name = fct_reorder(team_name, desc(cumulative_wins))
+  )
+
+margin_avgs %>%
+  select(team_name, avg_field_margin) %>%
+  arrange(desc(avg_field_margin)) %>%
+  slice(1)
+
+margin_avgs %>%
+  select(team_name, avg_free_margin) %>%
+  arrange(desc(avg_free_margin)) %>%
+  slice(1)
+
+margin_avgs %>%
+  select(team_name, avg_three_margin) %>%
+  arrange(desc(avg_three_margin)) %>%
+  slice(1)
+
+margin_avgs %>%
+  select(team_name, avg_turnover_margin) %>%
+  arrange(avg_turnover_margin) %>%
+  slice(1)
+
+margin_avgs %>%
+  select(team_name, avg_foul_margin) %>%
+  arrange(avg_foul_margin) %>%
+  slice(1)
+```
+
+```{r}
+# visualize margins by team
+ggplot(margin_avgs_pivoted, aes(x = margin_type, y = margin_value, fill = margin_type)) +
+  geom_col() +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~team_name, nrow = 2) +
+  theme_classic() +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  labs(x = "", y = "") +
+  theme(
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(), 
+    legend.title = element_text(size = 10),
+    legend.text = element_text(size = 8),   
+    legend.key.size = unit(0.5, "cm")  ) +
+  labs(x = "", y = "", fill = "Average Game Margins") +
+  scale_fill_manual(
+    values = c("avg_field_margin" = "#3c286e", "avg_free_margin" = "#5091cd", 
+      "avg_three_margin" = "#e31837", "avg_turnover_margin" = "#2c5235", 
+      "avg_foul_margin" = "#f05023"),
+    labels = c("avg_field_margin" = "Field Goals", "avg_free_margin" = "Free Throws",
+      "avg_three_margin" = "Three Pointers", "avg_turnover_margin" = "Turnovers", 
+      "avg_foul_margin" = "Fouls")
+  )
+```
+
+### Play-By-Play Dataset
+
+```{r}
+# get dimensions
+dim(wnba_pbp)
+```
+
+```{r}
+# create shot type variable
+wnba_pbp <- wnba_pbp %>%
+  filter(shooting_play) %>%
+  mutate(shot_type = case_when(
+    str_detect(type_text, "Jump Shot") ~ "Jump Shot",
+    str_detect(type_text, "Layup Shot") | str_detect(type_text, "Layup") ~ "Layup Shot",
+    str_detect(type_text, "Free Throw") ~ "Free Throw",
+    str_detect(type_text, "Hook Shot") | str_detect(type_text, "Hook") ~ "Hook Shot",
+    str_detect(type_text, "Tip Shot") ~ "Tip Shot",
+    str_detect(type_text, "Dunk") ~ "Dunk Shot"
+  )) 
+```
+
+```{r}
+wnba_pbp %>%  
+  filter(game_id != 401781604, shot_type != "Dunk Shot") %>%
+  mutate(shot_type = fct_relevel(shot_type, "Tip Shot", "Hook Shot", "Free Throw", "Layup Shot", "Jump Shot")) %>%
+  ggplot(aes(y = shot_type, fill = scoring_play)) +
+  geom_bar() +
+  theme_classic() +
+  labs(x = "count", y = "shot type", fill = "scoring play") +
+  scale_fill_manual(values = c("TRUE" = "#3c286e", "FALSE" = "#f05023"))
+```
+
+
+# Salary Data
+
+```{r}
+get_robotstxt(domain = "https://herhoopstats.com/")
+```
+
+```{r}
+start_url <- "https://herhoopstats.com/salary-cap-sheet/wnba/team/2025/"
+team_urls <- c(
+  "atlanta-dream-11eaecc7-356c-1364-b611-2362f5011b0b",    
+  "chicago-sky-11eaecc7-355f-1c4a-b611-2362f5011b0b",     
+  "connecticut-sun-11eaecc7-3562-4a0a-b611-2362f5011b0b",     
+  "dallas-wings-11eaecc7-3583-13fc-b611-2362f5011b0b",     
+  "golden-state-valkyries-11efb2ba-e2c6-f520-8806-9a93b15b3fec", 
+  "indiana-fever-11eaecc7-3565-c004-b611-2362f5011b0b",
+  "las-vegas-aces-11eaecc7-3575-e2fe-b611-2362f5011b0b",
+  "los-angeles-sparks-11eaecc7-3579-2ce8-b611-2362f5011b0b",
+  "minnesota-lynx-11eaecc7-357c-772c-b611-2362f5011b0b",
+  "new-york-liberty-11eaecc7-356f-5524-b611-2362f5011b0b",
+  "phoenix-mercury-11eaecc7-357f-c1ca-b611-2362f5011b0b",
+  "seattle-storm-11eaecc7-3572-876c-b611-2362f5011b0b",
+  "washington-mystics-11eaecc7-3568-d154-b611-2362f5011b0b"
+)
+full_urls <- str_c(start_url, team_urls, "/")
+
+salary_info <- function(url) {
+  Sys.sleep(1)
+  webpage <- read_html(url)
+
+  team <- webpage %>%
+    html_element("h1.salary_title") %>%
+    html_text(trim = TRUE)
+  
+  rows <- webpage %>%
+    html_elements("tbody tr")
+
+  map_df(rows, function(row) {
+
+    player <- row %>%
+      html_element("td.salary_player_name a") %>%
+      html_text(trim = TRUE)
+
+    salary_cell <- row %>%
+      html_elements("td.salary_cap_hit") %>%
+      .[1]
+
+    salary <- salary_cell %>%
+      html_attr("sorttable_customkey") %>%
+      as.numeric()
+
+    contract_type <- salary_cell %>%
+      html_attr("title") %>%
+      na_if("")
+
+    tibble(
+      name = player,
+      team = team,
+      salary = salary,
+      contract = contract_type
+    )
+  })
+}
+
+all_pages <- purrr::map(full_urls, salary_info)
+salary_df <- bind_rows(all_pages)
+
+```
+
+```{r}
+salary_df$salary[salary_df$salary == 0] <- NA
+
+salary_df <- salary_df %>%
+  mutate(contract = str_extract(contract, "^[^<]*")) %>%
+  mutate(team = str_extract(team, "(?<=2025 ).*")) %>%
+  mutate(team = str_extract(team, ".*(?= Salary Cap Sheet)")) %>%
+  mutate(team_name = case_when(
+    team == "Atlanta Dream" ~ "Dream",
+    team == "Chicago Sky" ~ "Sky",
+    team == "Connecticut Sun" ~ "Sun",
+    team == "Dallas Wings" ~ "Wings", 
+    team == "Golden State Valkyries" ~ "Valkyries",
+    team == "Indiana Fever" ~ "Fever",
+    team == "Las Vegas Aces" ~ "Aces",
+    team == "Los Angeles Sparks" ~ "Sparks",
+    team == "Minnesota Lynx" ~ "Lynx",
+    team == "New York Liberty" ~ "Liberty",
+    team == "Phoenix Mercury" ~ "Mercury",
+    team == "Seattle Storm" ~ "Storm",
+    team == "Washington Mystics" ~ "Mystics"
+  )) %>%
+  mutate(contract = 
+    fct_collapse(contract,
+      "Protected Veteran" = c("Protected Veteran"),
+      "Unprotected" = c("Unprotected"),
+      "7-Day Contract" = c("Complete 7-Day Contract"),
+      "Hardship Contract" = c("Complete Hardship Contract", "Active Hardship Contract"), 
+      "Waived" = c("Waived", "Waived Protected Veteran"),
+      "Protected Rookie Scale" = c("Protected Rookie Scale"),
+      "Buyout" = c("Buyout")
+    )
+  ) %>% 
+  mutate(across(where(is.numeric), ~ ifelse(is.nan(.), NA, .)))
+```
+
+```{r}
+top10_salary <- salary_df %>%
+  arrange(desc(salary)) %>%
+  select(name, team_name, salary, contract) %>%
+  head(10) 
+
+top10_salary %>%
+  kable(
+    col.names = c("Player", "Team", "Salary", "Contract"),
+    align = "lll"
+  ) %>%
+  kable_styling()
+```
+
+
+```{r}
+player_salary <- top_players %>%
+  left_join(salary_df, by = join_by(athlete_display_name == name, team_name == team_name)) 
+
+player_salary %>%
+  select(athlete_display_name, team_name, salary, contract) 
+```
+
+```{r}
+PIE <- player_game_totals %>%
+  group_by(athlete_display_name, team_name) %>%
+  summarize(avg_PIE = mean(player_PIE, na.rm = TRUE)) 
+
+player_salary_stats <- player_salary %>%
+  left_join(PIE, by = join_by(athlete_display_name == athlete_display_name, team_name == team_name)) %>%
+  drop_na() %>%
+  mutate(salary_thousands = salary/1000)
+
+ggplot(player_salary_stats, aes(x = avg_PIE, y = salary_thousands, color = contract)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_classic() +
+  labs(x = "Player Impact Estimate (Season Average)", y = "Salary in Thousands of Dollars", 
+       color = "Contract Type", title = "2025 WNBA Player Salaries by Player Performance and Contract Type")
+
+salary_contract_mod <- lm(salary_thousands ~ avg_PIE * contract, player_salary_stats)
+
+coef(summary(salary_contract_mod))
+```
+
+# Machine Learning
+
+```{r}
+# predicting playoff outcomes using LASSO on team dataset
+wnba_team_lasso <- wnba_team_box %>%
+  filter(game_id != 401781604) %>%
+  select(-season, -game_date_time, -team_id, -team_uid, -team_slug, -team_location, -team_abbreviation, -team_display_name, -team_short_display_name, -team_color, -team_alternate_color, -team_logo, -team_score, -opponent_team_id, -opponent_team_uid, -opponent_team_slug, -opponent_team_location, -opponent_team_abbreviation, -opponent_team_display_name, -opponent_team_short_display_name, -opponent_team_color, -opponent_team_alternate_color, -opponent_team_logo, -opponent_team_score) %>%
+  mutate(
+    team_winner = factor(team_winner),
+    largest_lead = as.numeric(largest_lead),
+    fast_break_points = as.numeric(fast_break_points),
+    turnover_points = as.numeric(turnover_points)) %>% 
+  mutate(season_day = as.numeric(game_date - as.Date("2025-05-16"))) %>%
+  select(-game_date)
+
+lasso_training <- wnba_team_lasso %>%
+  filter(season_type != 3) %>%
+  select(-game_id, -season_type)
+
+lasso_test <- wnba_team_lasso %>%
+  filter(season_type == 3) %>%
+  select(-game_id, -season_type)
+
+# model specification
+set.seed(212)
+model_spec <- logistic_reg() %>%
+  set_mode("classification") %>% 
+  set_engine("glmnet") %>%
+  set_args(mixture = 1, penalty = tune())
+
+# variable recipe
+data_rec <- recipe(team_winner ~ . , data = lasso_training) %>%
+  step_novel(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors())
+
+# workflow (algorithm + recipe)
+model_wf <- workflow() %>% 
+  add_recipe(data_rec) %>%
+  add_model(model_spec) 
+
+# estimate 50 LASSO models
+multiple_models <- model_wf %>%
+ tune_grid(
+    grid = grid_regular(
+      penalty(range = c(-5, 3)),     
+      levels = 50
+    ),
+    resamples = vfold_cv(lasso_training, v = 10),
+    metrics = metric_set(accuracy)
+ )
+
+# determine parsimonious parameter
+parsimonious_param <- multiple_models %>%   
+  select_by_one_std_err(metric = "accuracy", desc(penalty))
+
+# determine best (highest accuracy) parameter
+best_param <- multiple_models %>%   
+  select_best(metric = "accuracy")
+
+# build final parsimonious model
+final_model <- model_wf %>% 
+  finalize_workflow(parsimonious_param) %>% 
+  fit(data = lasso_training)
+
+# print coefficients
+final_model %>%
+  tidy() %>%
+  filter(estimate != 0)
+
+multiple_models %>% 
+  collect_metrics() %>%
+  filter(penalty == parsimonious_param$penalty)
+
+multiple_models %>%
+  autoplot()
+
+test_classifications <- final_model %>% # name of your final model
+  augment(new_data = lasso_test) 
+
+test_confusion <- final_model %>%
+  augment(new_data = lasso_test) %>%
+  conf_mat(truth = team_winner, estimate = .pred_class)
+
+summary(test_confusion, event_level = "second")
+
+test_confusion %>% 
+  autoplot() +
+  aes(fill = rep(colnames(test_confusion$table), ncol(test_confusion$table))) + 
+  theme(legend.position = "none")
+```
+
+
+```{r}
+# alternative LASSO that combines both teams stats into one row instead of having two rows per game
+team_lasso <- wnba_team_box %>%
+  filter(game_id != 401781604) %>%
+  select(-season, -season_type, -game_date_time, -team_id, -team_uid, -team_slug, -team_location, -team_abbreviation, -team_display_name, -team_short_display_name, -team_color, -team_alternate_color, -team_logo, -team_score, -opponent_team_id, -opponent_team_uid, -opponent_team_slug, -opponent_team_location, -opponent_team_name, -opponent_team_abbreviation, -opponent_team_display_name, -opponent_team_short_display_name, -opponent_team_color, -opponent_team_alternate_color, -opponent_team_logo, -opponent_team_score) %>%
+  mutate(team_winner = factor(team_winner))
+
+team1_lasso <- team_lasso %>% group_by(game_id) %>% slice(1)
+team2_lasso <- team_lasso %>% group_by(game_id) %>% slice(2)
+
+team2_lasso <- team2_lasso %>% rename_with(~paste0("opponent_", .x), -game_id)
+
+both_teams_lasso <- left_join(team1_lasso, team2_lasso, by = "game_id") 
+
+both_teams_lasso <- both_teams_lasso %>%
+  ungroup() %>% 
+  mutate(season_day = as.numeric(game_date - as.Date("2025-05-16"))) %>%
+  select(-opponent_team_winner, -game_date, -opponent_game_date)
+
+lasso_training <- both_teams_lasso %>%
+  filter(!game_id%in%c("401820329", "401820326", "401820325", "401820322")) %>%
+  select(-game_id)
+
+lasso_test <- both_teams_lasso %>%
+  filter(game_id%in%c("401820329", "401820326", "401820325", "401820322")) %>%
+  select(-game_id)
+
+# Train
+
+# model specification
+set.seed(212)
+model_spec <- logistic_reg() %>%
+  set_mode("classification") %>% 
+  set_engine("glmnet") %>%
+  set_args(mixture = 1, penalty = tune())
+
+# variable recipe
+data_rec <- recipe(team_winner ~ . , data = lasso_training) %>%
+  step_novel(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors())
+
+# workflow (algorithm + recipe)
+model_wf <- workflow() %>% 
+  add_recipe(data_rec) %>%
+  add_model(model_spec) 
+
+# estimate 50 LASSO models
+multiple_models <- model_wf %>%
+ tune_grid(
+    grid = grid_regular(
+      penalty(range = c(-5, 3)),     
+      levels = 50
+    ),
+    resamples = vfold_cv(lasso_training, v = 10),
+    metrics = metric_set(accuracy)
+ )
+
+# determine parsimonious parameter
+parsimonious_param <- multiple_models %>%   
+  select_by_one_std_err(metric = "accuracy", desc(penalty))
+
+# determine best (highest accuracy) parameter
+best_param <- multiple_models %>%   
+  select_best(metric = "accuracy")
+
+# build final parsimonious model
+final_model <- model_wf %>% 
+  finalize_workflow(parsimonious_param) %>% 
+  fit(data = lasso_training)
+
+# print coefficients
+final_model %>%
+  tidy() %>%
+  filter(estimate != 0)
+
+multiple_models %>% 
+  collect_metrics() %>%
+  filter(penalty == parsimonious_param$penalty)
+
+multiple_models %>%
+  autoplot()
+
+final_model %>% # name of your final model
+  augment(new_data = lasso_test) 
+  
+final_model %>%
+  augment(new_data = lasso_test) %>%
+  accuracy(truth = team_winner, estimate = .pred_class)
+
+final_model %>%
+  augment(new_data = lasso_test) %>%
+  conf_mat(truth = team_winner, estimate = .pred_class)
+```
+
+```{r}
+# predicting teams in the playoffs using random forest
+wnba_team_lasso <- wnba_team_box %>%
+  filter(game_id != 401781604) %>%
+  select(-season, -game_date_time, -team_id, -team_uid, -team_slug, -team_location, -team_abbreviation, -team_display_name, -team_short_display_name, -team_color, -team_alternate_color, -team_logo, -opponent_team_id, -opponent_team_uid, -opponent_team_slug, -opponent_team_location, -opponent_team_abbreviation, -opponent_team_display_name, -opponent_team_short_display_name, -opponent_team_color, -opponent_team_alternate_color, -opponent_team_logo, -opponent_team_name) %>%
+  mutate(
+    team_winner = factor(team_winner),
+    team_name = factor(team_name),
+    largest_lead = as.numeric(largest_lead),
+    fast_break_points = as.numeric(fast_break_points),
+    turnover_points = as.numeric(turnover_points)) %>% 
+  mutate(season_day = as.numeric(game_date - as.Date("2025-05-16"))) %>%
+  select(-game_date)
+
+lasso_training <- wnba_team_lasso %>%
+  filter(season_type != 3) %>%
+  select(-game_id, -season_type)
+
+lasso_test <- wnba_team_lasso %>%
+  filter(season_type == 3) %>%
+  select(-game_id, -season_type)
+
+# model specification
+set.seed(212)
+# STEP 1: Model Specification
+rf_spec <- rand_forest()  %>%
+  set_mode("classification") %>%
+  set_engine(engine = "ranger") %>% 
+  set_args(
+    mtry = NULL,
+    trees = 500,
+    min_n = 2,
+    probability = FALSE, # give classifications, not probability calculations
+    importance = "impurity" # use Gini index to measure variable importance
+  )
+
+# STEP 2: Build the forest or bagging model
+# There are no preprocessing steps or tuning, hence no need for a workflow!
+ensemble_model <- rf_spec %>% 
+  fit(team_name ~ ., data = lasso_training)
+
+
+# Put in a data.frame object with x1 and x2 values (at minimum)
+ensemble_model %>% 
+  predict(new_data = lasso_test)  
+
+# Out-of-bag (OOB) prediction error
+ensemble_model
+
+# OOB confusion matrix
+ensemble_model %>% 
+  extract_fit_engine() %>% 
+  pluck("confusion.matrix") %>% 
+  t()
+
+ensemble_model %>% 
+  predict(new_data = lasso_test) %>% 
+  cbind(lasso_test) %>% 
+  conf_mat(
+    truth = team_name,
+    estimate = .pred_class
+  )
+```
+
+```{r}
+# PCA on player dataset
+PCA_player <- wnba_player_box %>%
+  filter(game_id != 401781604) %>%
+  group_by(athlete_display_name, team_name) %>%
+  mutate(player_unique = paste0(athlete_display_name, "_", team_name)) %>%
+  ungroup() %>%
+  group_by(player_unique, team_name) %>%
+  summarize(
+    athlete_display_name = first(athlete_display_name),
+    avg_minutes = mean(minutes, na.rm = TRUE),
+    avg_field_goals_made = mean(field_goals_made, na.rm = TRUE),
+    avg_field_goals_attempted = mean(field_goals_attempted, na.rm = TRUE),
+    avg_threes_made = mean(three_point_field_goals_made, na.rm = TRUE),
+    avg_threes_attempted = mean(three_point_field_goals_attempted, na.rm = TRUE),
+    avg_free_throws_made = mean(free_throws_made, na.rm = TRUE),
+    avg_free_throws_attempted = mean(free_throws_attempted, na.rm = TRUE),
+    avg_free_throws_attempted = mean(free_throws_attempted, na.rm = TRUE),
+    avg_ppg = mean(points, na.rm = TRUE),
+    avg_blocks = mean(blocks, na.rm = TRUE),
+    avg_rebounds = mean(rebounds, na.rm = TRUE),
+    avg_offensive_rebounds = mean(offensive_rebounds, na.rm = TRUE),
+    avg_defensive_rebounds = mean(offensive_rebounds, na.rm = TRUE),
+    avg_assists = mean(assists, na.rm = TRUE),
+    avg_steals = mean(steals, na.rm = TRUE),
+    avg_turnovers = mean(turnovers, na.rm = TRUE),
+    avg_fouls = mean(fouls, na.rm = TRUE),
+    games_started = sum(starter, na.rm = TRUE),
+    games_ejected = sum(ejected, na.rm = TRUE), 
+    games_did_not_play = sum(did_not_play, na.rm = TRUE),
+    mean_plus_minus = mean(as.numeric(plus_minus), na.rm = TRUE),
+    position = names(which.max(table(athlete_position_name, useNA = "no"))),
+    wins = sum(team_winner),
+    avg_team_score = mean(team_score)
+    ) %>%
+  left_join(salary_df, by = join_by(athlete_display_name == name, team_name == team_name)) %>%
+  left_join(PIE, by = join_by(athlete_display_name == athlete_display_name, team_name == team_name)) %>% 
+  mutate(across(where(is.numeric), ~ ifelse(is.nan(.), NA, .))) %>%
+  drop_na()
+
+PCA_player <- PCA_player[-c(5, 7, 9, 10, 15, 21, 30, 41, 47, 49, 72, 76, 78, 79, 98, 99, 116, 117, 138, 165, 189), ] 
+
+PCA_player <- PCA_player %>%
+  select(-athlete_display_name) %>%
+  column_to_rownames("player_unique")
+
+PCA_player_dummy <- data.frame(model.matrix(~ . - 1, PCA_player))
+
+PCA_player_dummy <- PCA_player_dummy %>%
+  select(-contractBuyout, -games_ejected)
+
+# scale = TRUE, center = TRUE first standardizes the features
+pca_results <- prcomp(PCA_player_dummy, scale = TRUE, center = TRUE)
+```
+
+```{r, fig.width=8, fig.height=5}
+# Get the loadings which define the PCs
+# pca_results %>% 
+#  pluck("rotation")
+
+melt(pca_results$rotation) %>%
+  filter(Var2 == "PC1") %>% 
+  ggplot(aes(x = Var1, y = value, fill = Var1)) +
+    geom_bar(stat = "identity") +
+    labs(y = "loadings", x = "original features", fill = "original features")
+
+# Plot loadings for first "k" PCs (you pick k)
+library(reshape2)
+melt(pca_results$rotation[, 1:2]) %>% 
+  ggplot(aes(x = Var1, y = value, fill = Var1)) +
+    geom_bar(stat = "identity") +
+    facet_wrap(~ Var2) + 
+    labs(y = "loadings", x = "original features", fill = "original features") +
+    theme(legend.position = "none") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+```
+
+```{r, fig.width=7, fig.height=7}
+# Loadings plot for first 2 PCs
+fviz_pca_var(pca_results, repel = TRUE)
+
+# Numerical summaries: Measure information captured by each PC
+pca_results %>% 
+  tidy(matrix = "eigenvalues")
+```
+
+```{r}
+# Graphical summary 1: SCREE PLOT
+# Plot % of variance explained by each PC
+pca_results %>% 
+  tidy(matrix = "eigenvalues") %>% 
+  ggplot(aes(y = percent, x = PC)) + 
+    geom_point(size = 2) + 
+    geom_line() + 
+    labs(y = "% of variance explained")
+
+# Graphical summary 2: Plot cumulative % of variance explained by each PC
+pca_results %>% 
+  tidy(matrix = "eigenvalues") %>% 
+  rbind(0) %>% 
+  ggplot(aes(y = cumulative, x = PC)) + 
+    geom_point(size = 2) + 
+    geom_line() + 
+    labs(y = "CUMULATIVE % of variance explained")
+
+# Numerical summary: check out the scores
+# pca_results %>% 
+#  pluck("x")
+```
+
+```{r, fig.width=7, fig.height=7}
+# Graphical summary: Score plot
+# Plot PC1 scores (x-axis) vs PC2 scores (y-axis) of all data points
+fviz_pca_ind(
+  pca_results, 
+  repel = TRUE, 
+  label = "none",
+  col.ind = PCA_player$avg_PIE, 
+  gradient.cols = c("lightyellow", "red"),
+  legend.title = "Average PIE",
+  title = "PCA Score Plot"
+  )
+
+fviz_pca_ind(
+  pca_results, 
+  repel = TRUE, 
+  label = "none",
+  col.ind = PCA_player$wins, 
+  gradient.cols = c("lightyellow", "red"),
+  legend.title = "Number of Wins",
+  title = "PCA Score Plot"
+  )
+
+fviz_pca_ind(
+  pca_results, 
+  repel = TRUE, 
+  label = "none",
+  habillage = factor(PCA_player$team_name),
+  geom = "point",
+  pointshape = 19,
+  addEllipses = TRUE, 
+  ellipse.level=0.95,
+  legend.title = "Team",
+  title = "PCA Score Plot"
+  )
+
+fviz_pca_ind(
+  pca_results, 
+  repel = TRUE, 
+  label = "none",
+  habillage = PCA_player$position,
+  geom = "point",
+  pointshape = 19,
+  addEllipses = TRUE
+  )
+```
+
+```{r}
+# K Means (from PCA)
+pca_df <- as.data.frame(pca_results$x[, 1:2])
+
+colnames(pca_df) <- c("PC1", "PC2")
+
+set.seed(212)
+kmeans_pca_model <- kmeans(scale(pca_df), centers = 4)
+
+pca_df %>% 
+  mutate(kmeans_cluster = as.factor(kmeans_pca_model$cluster)) %>%
+  ggplot(aes(x = PC1, y = PC2, color = kmeans_cluster)) + 
+  geom_point(size = 3) + 
+  theme(legend.position = "none") + 
+  labs(title = "K-means with K = 3 (round 2)") + 
+  theme_minimal()
+
+k_means_pca_cluster <- pca_df %>% 
+  mutate(kmean_cluster_k = as.factor(kmeans_pca_model$cluster)) %>%
+  group_by(kmean_cluster_k) %>%
+  summarise_all(mean)
+
+head(k_means_pca_cluster)
+
+# Get the "the total within- cluster sum of squares"
+# This is the total squared distance of each case from its assigned centroid
+kmeans_pca_model$tot.withinss
+
+```
+
+```{r}
+# K Means (OG data)
+set.seed(212)
+kmeans_model <- kmeans(scale(PCA_player_dummy), centers = 4)
+
+k_means_cluster <- PCA_player_dummy %>% 
+  mutate(kmean_cluster_k = as.factor(kmeans_model$cluster)) %>%
+  group_by(kmean_cluster_k) %>%
+  summarise_all(mean)
+
+head(k_means_cluster)
+
+# Get the "the total within- cluster sum of squares"
+# This is the total squared distance of each case from its assigned centroid
+kmeans_model$tot.withinss
+
+cluster_data <- PCA_player_dummy %>% 
+  mutate(kmeans_cluster = kmeans_model$cluster) %>%
+  mutate(kmeans_cluster = as.factor(kmeans_model$cluster))
+
+PCA_player_dummy %>% 
+  mutate(kmeans_cluster = as.factor(kmeans_model$cluster)) %>%
+  ggplot(aes(x = avg_PIE, y = salary, color = kmeans_cluster)) + 
+  geom_point(size = 3) + 
+  theme(legend.position = "none") + 
+  labs(title = "K-mean") + 
+  theme_minimal()
+
+ggplot(cluster_data, aes(x = avg_PIE, y = salary, color = kmeans_cluster)) + 
+  geom_point(size = 3) + 
+  theme(legend.position = "none") + 
+  labs(title = "K-means results") + 
+  theme_minimal()
+```
+

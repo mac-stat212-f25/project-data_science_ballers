@@ -15,6 +15,20 @@ In this analysis, we present insightful ways of measuring and visualizing team a
 
 ## Background
 
+The WNBA is the professional women’s basketball league in the United States. There are 13 teams in the WNBA, and there are 12 rostered players (players that are actively playing) on each team. The entire league is split into two conferences, the Eastern and Western Conferences. Every team plays 44 games in a regular season, most games against teams in their conference but some outside. 
+After the regular season ends, the best teams move onto an elimination tournament called the playoffs. The playoffs include the top 8 teams in either conference, based on win-loss record. These teams compete in a series of games where losing teams are gradually eliminated until only one remains. The final winner is crowned the WNBA champion. 
+
+Because our project analyzes team and individual performance, it is important to understand the common statistics that help measure performance:
+Points per game (PPG): total number of points scored per game
+Shots: total number of shots taken, including missed shots
+Assists: passes made that directly led to a point scored
+Blocks: blocking and opponents shot to prevent a point
+Steals: taking the ball away from the opponent before they can take a shot
+Rebounds: gaining possession of the ball after a missed shot (offensive or defensive)
+Turnovers: the opposite of steals; losing the ball to the opponent before they take a shot 
+Record: this is the total amount of wins and losses that a team accumulates
+
+
 ## Data
 
 Wehoop is an R package for analyzing women’s college and professional basketball data. It is a scraping and aggregating interface for ESPN’s women’s college basketball and WNBA statistics developed by Saiem Gilani and Geoff Hutchinson. In this analysis, we use wnba play-by-play, team box score, and player box score datasets from 2025. The play-by-play dataset (121,342 x 62) contains every play from every game. It has text explaining the type of play (layup, rebound, foul, substitution, free throw, etc.) and players involved. It also has timestamps, player coordinates, and basic game information. The team box score dataset (624 x 57) has information about team performance for every game, including total shots attempted and made, fouls, rebounds, turnovers, and more. It also contains useful information for creating visualizations such as team colors and logos. The player box score dataset (7,140 x 57) contains similar in-game statistics as the team box score dataset but broken down by individual. It also has basic player information including position and whether or not the player is a starter. Across all datasets, very little cleaning was required apart from the removal of the All Star game.
@@ -33,6 +47,7 @@ library(factoextra)
 library(reshape2)
 library(knitr)
 library(kableExtra)
+library(plotly)
 
 # load wehoop data
 wnba_pbp <- wehoop::load_wnba_pbp()
@@ -136,9 +151,38 @@ salary_df <- salary_df %>%
   mutate(across(where(is.numeric), ~ ifelse(is.nan(.), NA, .)))
 ```
 
+Social media popularity was measured by considering the number of Instagram followers each player has. We scraped revoltv.com to create a 10 by 2 dataframe of the top 10 most followed players and their follower count. The data had to be cleaned to extract the players’ names and total number of followers. For players not in the top 10 most followed list, we manually added their follower count by looking up their accounts on the app.
+
 ```{r}
 # social media data
+url <- "https://www.revolt.tv/article/wnba-players-with-the-most-instagram-followers"
 
+page <- read_html(url)
+
+# extract elements
+headers <- page %>%
+  html_elements("h2 strong") %>%
+  html_text2
+
+# clean data frame
+most_followers <- headers %>%
+  str_remove("^\\d+\\.\\s*") %>%
+  str_match("^(.*?)\\s*\\((.*)\\)$") %>% 
+  as_tibble() %>%
+  select(V2, V3) %>%
+  mutate(V3 = V3 %>%                  
+           str_remove("over\\s*") %>%           
+           str_replace(" million", "e6") %>%    
+           as.numeric()) %>%
+filter(V2 != "Candace Parker") %>%
+  arrange(desc(V3)) %>%
+  slice(1:10) 
+
+colnames(most_followers) <- c("athlete_display_name", "follower_count")
+
+# create variable for followers in millions
+most_followers <- most_followers %>%
+  mutate(followers_millions = follower_count/1000000)
 ```
 
 ## Analysis and Insights
@@ -363,7 +407,9 @@ multiple_models %>%
   collect_metrics() %>%
   filter(penalty == parsimonious_param$penalty)
 ```
-The predictors used in our final model include assists, blocks, defensive rebounds, field goal percent, flagrant fouls, fouls, free throws made, largest lead, steals, three point field goals made, total rebounds, turnover points, turnovers, Lynx, and Wings. 
+The predictors included in our final model and their coefficients can be seen in the equation below. 
+
+![](figures/LASSO_eq.png){fig-align="center"}
 
 Fouls and turnovers both had negative coefficients, meaning they decrease the odds of a team winning, which supports our insights from the previous visualization.
 
@@ -395,7 +441,14 @@ Our model correctly predicted the outcomes of the playoff games 79.17% of the ti
 
 #### Individual Performance
 
+Season outcomes and team performance stem from the performance of individual players. In the next component of our analysis, we developed and validated a metric for determining the best players in the league.
+
 ###### Player Impact Estimate
+
+Player Impact Estimate (PIE) is a performance metric developed by the NBA to evaluate a player's contribution to their team's success in a specific basketball game. It includes both offensive and defensive metrics and balance positive impacts against negative impacts. 10 is considered to be a solid PIE score. The equation used to calculate PIE can be seen below.
+
+![](figures/PIE_eq.png){fig-align="center"}
+We calculated PIE for each player in every game and then calculated the season average for each player. The players with the 10 highest season average PIE scores are listed below.
 
 ```{r}
 # calculate game totals for PIE metric calculation
@@ -419,7 +472,7 @@ game_totals <- wnba_team_box %>%
   ) %>%
   ungroup()
 
-# calculate pie for each player in every game
+# calculate PIE for each player in every game
 player_game_totals <- wnba_player_box %>%
   full_join(game_totals, by = "game_id") %>%
   select("game_id", "game_date", "athlete_id", "athlete_display_name", "team_id", 
@@ -457,12 +510,16 @@ top10_pie %>%
   kable_styling()
 ```
 
+###### Principle Component Analysis
+
+As an alternative method of assessing player performance, we used principle component analysis (PCA), a machine learning technique for reducing the dimensionality of data. It turns a set of correlated features into a smaller set of uncorrelated features, called principal components (PCs), which preserve the majority of information in the data. This is useful for analysis as we have many in-game stats that could be used to determine player performance.
+
 ```{r}
 # prepare player dataset for PCA
 PCA_player <- wnba_player_box %>%
   filter(game_id != 401781604) %>%
   group_by(athlete_display_name, team_name) %>%
-  mutate(player_unique = paste0(athlete_display_name, "_", team_name)) %>%
+  mutate(player_unique = paste0(athlete_display_name, " (", team_name, ")")) %>%
   ungroup() %>%
   group_by(player_unique, team_name) %>%
   summarize(
@@ -516,8 +573,20 @@ PCA_player_dummy <- PCA_player_dummy %>%
 # standardize features and perform pca
 pca_results <- prcomp(PCA_player_dummy, scale = TRUE, center = TRUE)
 
+melt(pca_results$rotation) %>%
+  filter(Var2 == "PC1") %>% 
+  ggplot(aes(x = Var1, y = value)) +
+    geom_bar(stat = "identity") +
+    labs(y = "Loadings", x = "Original Features", title = "Contributions of Orignal Features to PC1") +
+    theme_minimal() +
+    theme(legend.position = "none", axis.text.x = element_text(angle = 90, hjust = 1)) 
+```
+
+The first PC captures the most variability in the data. As seen in this bar chart, the original features that contributed the most to PC1 are in-game statistics, such as shooting percentages and rebounds. This suggests that PC1 is mainly a summary of player performance.
+
+```{r}
 # plot PC1 scores (x-axis) vs PC2 scores (y-axis) of all data points and color by PIE
-fviz_pca_ind(
+p <- fviz_pca_ind(
   pca_results, 
   repel = TRUE, 
   label = "none",
@@ -526,9 +595,31 @@ fviz_pca_ind(
   legend.title = "Average PIE",
   title = "PCA Score Plot by PIE"
 )
+
+pca_df <- p$data
+
+# Add player names to hover text (assuming column is 'player')
+pca_df$player <- row.names(PCA_player)
+
+# Rebuild plot with 'text' aesthetic
+p2 <- ggplot(pca_df, aes(x = x, y = y)) +
+  geom_point(aes(color = Col., text = player)) +
+  scale_color_gradient(low = "lightyellow", high = "red") +
+  labs(title = "PCA Score Plot by PIE", color = "Average PIE", x = "Dim1 (23.2%)", y = "Dim2 (7.1%)") +
+  theme_minimal()
+
+# Convert to interactive plotly with hover
+ggplotly(p2, tooltip = "text")
 ```
+PC1 (x-axis) is well aligned with PIE and players with high PC1 scores also tend to have high PIE scores. This validates our use of PIE as a robust and holistic measure of player performance.
+
+#### Performance and Success
+
+In the final portion of our analysis, we investigated how a player's performance relates to other measures of success such as salary and recognition.
 
 ###### Salary and Performance
+
+The players with the 10 highest salaries can be seen in the table below.
 
 ```{r}
 # determine players with top 10 highest salaries
@@ -545,7 +636,12 @@ top10_salary %>%
   kable_styling()
 ```
 
+Interestingly, Breanna Stewart and Alyssa Thomas are the only two players in this table who also appeared in the PIE Top Ten.
+
+Visualizing the relationship between PIE and salary by contract type provides more nuanced insights.
+
 ```{r}
+# join salary and player performance datasets
 player_salary_stats <- wnba_player_box %>%
   filter(game_id != 401781604) %>%
   group_by(athlete_display_name, team_name) %>%
@@ -555,25 +651,96 @@ player_salary_stats <- wnba_player_box %>%
   left_join(PIE, by = join_by(
       athlete_display_name == athlete_display_name, team_name == team_name)) %>%
   drop_na() %>%
-  mutate(salary_thousands = salary/1000)
+  mutate(salary_thousands = salary/1000) %>%
+  mutate(player_unique = paste0(athlete_display_name, " (", team_name, ")"))
 
-ggplot(player_salary_stats, aes(x = avg_PIE, y = salary_thousands, color = contract)) +
+p <- ggplot(player_salary_stats, aes(x = avg_PIE, y = salary_thousands, color = contract, 
+  text = player_unique)) +
   geom_point() +
-  geom_smooth(method = "lm", se = FALSE) +
+  geom_smooth(aes(group = contract, color = contract), method = "lm", se = FALSE) +
   theme_classic() +
   labs(x = "Player Impact Estimate (Season Average)", y = "Salary in Thousands of Dollars", 
-      color = "Contract Type", 
-      title = "Player Salaries by Performance and Contract Type") +
+      color = "Contract Type", title = "Player Salaries by Performance and Contract Type") +
   scale_color_manual(
       values = c("Hardship Contract" = "#3c286e", "Unprotected" = "#5091cd", 
           "Waived" =  "#2c5235", "Protected Veteran" = "#e31837", 
           "Protected Rookie Scale" = "#f05023", "7-Day Contract" = "#86cebc"),
       labels = c("Hardship Contract", "Unprotected", "Waived", "Protected Veteran", 
           "Protected Rookie Scale", "7-Day Contract"))
+
+ggplotly(p, tooltip = "text")
 ```
 
+The relationship between player performance and salary appears to be strongest for protected veterans, experienced players with guaranteed salaries. The trends for unprotected and waived players also appear to be positive, but this may be due to the several high outliers. The flat slope for protected rookies makes sense given that their salaries are generally standardized. Players with 7-day or hardship contracts typically are only on the roster for a portion of the season, so their salaries also tend to be static.
 
 ###### Popularity and Performance
+
+As a measure of player popularity and recognition, we looked into the Instagram following of a subset of players. The most followed players on Instagram can be seen in the table below.
+
+```{r}
+# players with top 10 highest PIEs
+player_game_totals_social <- player_game_totals %>%
+  group_by(athlete_display_name, team_name) %>%
+  summarize(avg_PIE = mean(player_PIE, na.rm = TRUE)) %>%
+  na.omit()
+  
+player_game_totals_social_top <- player_game_totals_social %>% 
+  ungroup() %>%
+  arrange(desc(avg_PIE)) %>%
+  slice(1:10)
+
+# players with top 10 highest follower counts
+most_followers %>%
+  select(athlete_display_name, followers_millions) %>%
+  kable(col.names = c("Player", "Followers in Millions"),
+        align = "ll") %>%
+  kable_styling()
+```
+
+Three of these players also appeared in the top ten PIE table. As a way of visualizing the relationship between player performance and social media following, the players with the 10 highest PIE scores and 10 highest Instagram followers were plotted with respect to their PIE and Instagram follower percentiles. A hype score was determined by calculating the difference between the two percentiles. Players in red are more popular relative to their performance while players in blue are less popular relative to their performance.
+
+```{r}
+# join PIE and follower datasets
+top_followers_stats <- most_followers %>%
+  left_join(player_game_totals_social, by = "athlete_display_name") %>%
+  select(athlete_display_name, team_name, avg_PIE, follower_count)
+
+missing_PIE <- player_game_totals_social_top %>%
+  filter(!athlete_display_name %in% top_followers_stats$athlete_display_name)
+
+# manual follower counts
+manual_followers <- tibble(
+  athlete_display_name = missing_PIE$athlete_display_name,
+  follower_count = c(91600, 340000, 494000, 212000, 383000, 183000, 196000)
+)
+
+missing_PIE <- missing_PIE %>%
+  left_join(manual_followers, by = "athlete_display_name")
+
+final_dataset <- bind_rows(top_followers_stats, missing_PIE) %>%
+  distinct(athlete_display_name, .keep_all = TRUE) %>%
+  arrange(desc(avg_PIE)) 
+
+final_dataset <- final_dataset %>%
+  mutate(follower_pct = percent_rank(follower_count)) %>%
+  mutate(PIE_pct = percent_rank(avg_PIE)) %>%
+  mutate(hype_score = follower_pct - PIE_pct)
+
+ggplot(final_dataset, aes(x = follower_pct, y = PIE_pct, color = hype_score)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_vline(xintercept = 0.5, linetype = "dashed") +
+  geom_text_repel(aes(label = athlete_display_name), size = 3) +
+  scale_color_gradient2(low = "#4575b4", mid = "grey", high = "#d73027",
+    midpoint = 0, name = "Hype Score") +
+  labs(
+    title = str_wrap("Popularity vs. Performance: Identifying Over-Hyped and Under-Recognized Players", 70),
+    x = "Instagram Popularity (Percentile)",
+    y = "On-Court Impact (PIE Percentile)",
+    color = "Hype Score") + 
+  theme_minimal()
+```
+Several of the players in the bottom right quadrant of the plot with positive hype scores, including Paige Bueckers, Angel Reese, Caitlin Clark, Cameron Brink, and Hailey Van Lith are young players who have played in the WNBA for two or less years. These athletes were also some of the most popular college players. Apart from Aliyah Boston, the players with negative hype scores are all veterans who have been in the league since before it began to grow in popularity. This suggests that where a player's college career falls on the timeline of women's basketball's growth has a greater bearing on their recognition and popularity than their performance in the league.
 
 ## Conclusions
 
