@@ -649,7 +649,7 @@ final_model %>%
   conf_mat(truth = team_winner, estimate = .pred_class)
 ```
 
-```{r}
+```{r, eval=FALSE}
 # predicting teams in the playoffs using random forest
 wnba_team_lasso <- wnba_team_box %>%
   filter(game_id != 401781604) %>%
