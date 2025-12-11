@@ -2,4 +2,91 @@
 title: "Proposal"
 ---
 
-Your proposal go here.
+## Title: Analysis of the 2025 WNBA Season
+
+## Authors: Cate Stacy and Karyna Steele
+
+## Project Description
+
+We are analyzing Women's National Basketball Association (WNBA) data from the 2025 season.
+We have access to play-by-play, team box score, and player box score data.
+We plan on exploring factors that contribute to the success of teams and individuals.
+
+## Research Questions
+
+-   What factors, such as points scored, turnovers, or fouls, influence playing time for a WNBA player?
+
+-   What are the characteristics of winning teams?
+    Do these characteristics align with the outcome of the championships?
+
+## Inspiration
+
+As student-athletes, we were interested in pursuing a project surrounding women's sports.
+In recent years, women’s basketball has experienced a rapid rise in popularity.
+This has coincided with the growth of the WNBA, making it an exciting topic to analyze.
+
+## Data
+
+```{r}
+library(wehoop)
+library(tidyverse)
+
+wnba_pbp <- wehoop::load_wnba_pbp()
+wnba_team_box <- wehoop::load_wnba_team_box()
+wnba_player_box <- wehoop::load_wnba_player_box()
+```
+
+## Implementation Plan
+
+1)  Clean the data sets (together)
+
+<!-- -->
+
+a.  Identify NA values and filter variables we need to answer our research questions
+
+<!-- -->
+
+2)  EDA (individually) a.Make visualizations and identify variables that could be valuable for our analysis
+
+<!-- -->
+
+b.  Summarize finding and narrow down research questions
+
+<!-- -->
+
+3)  Research (individually)
+
+<!-- -->
+
+a.  Conduct research about the data (ex. How it was collected)
+b.  Do background research on topic
+
+<!-- -->
+
+4)  Create preliminary findings presentation (together)
+
+<!-- -->
+
+a.  Collaborate on presentation and present to classmates
+
+<!-- -->
+
+5)  Create data story and present to class (together)
+
+<!-- -->
+
+a.  Ensure that report is clean (hide warnings, ensure there are no long outputs)
+b.  Revise according to feedback
+
+<!-- -->
+
+6)  Clean up and organize GitHub repository (together)
+
+<!-- -->
+
+a.  Add README file
+
+<!-- -->
+
+7)  Create presentation slides and video (together)
+8)  Evaluation and reflection (individually)

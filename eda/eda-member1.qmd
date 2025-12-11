@@ -1,5 +1,236 @@
 ---
-title: "Member 1 First Name & Last Name Initial"
+title: "Cate S."
 ---
 
-Your exploratory data analysis of the team datasets go here.
+```{r}
+library(wehoop)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+
+wnba_pbp <- wehoop::load_wnba_pbp()
+wnba_team_box <- wehoop::load_wnba_team_box()
+wnba_player_box <- wehoop::load_wnba_player_box()
+```
+
+
+### Player Dataset
+
+dimensions:
+
+```{r}
+# get dimensions
+dim(wnba_player_box)
+```
+
+First, I looked at the league's best players. I made a new dataset with the average stats for each player and ordered it by the most points per game.
+
+```{r}
+# find the league's best players
+top_players <- wnba_player_box %>%
+  group_by(athlete_display_name) %>%
+  summarize(
+    avg_ppg = mean(points, na.rm = TRUE),
+    avg_blocks = mean(blocks, na.rm = TRUE),
+    avg_rebounds = mean((offensive_rebounds + defensive_rebounds), na.rm = TRUE),
+    avg_assists = mean(assists, na.rm = TRUE),
+    avg_steals = mean(steals, na.rm = TRUE),
+    )
+
+top_players %>%
+  arrange(desc(avg_ppg)) %>%
+  head(10)
+```
+
+A'ja Wilson led the league in scoring. In addition to playing for the championship team, the Las Vegas Aces, she was also named MVP.
+
+### Team Dataset
+
+dimensions:
+
+```{r}
+# get dimensions
+dim(wnba_team_box)
+```
+
+I made running counts of each teams wins and losses so that their records could be determined at any point in the season. I made a visualization showing the cumulative wins for each team over the course of the season.
+
+```{r}
+# determine records for each team
+wnba_team_records <- wnba_team_box %>%
+  filter(game_id != 401781604) %>%
+  mutate(
+    win = ifelse(team_winner == TRUE, 1, 0),
+    loss = ifelse(team_winner == FALSE, 1, 0)
+  ) %>%
+  group_by(team_name) %>%
+  arrange(team_name, game_date) %>% 
+  mutate(
+    cumulative_wins = cumsum(win),
+    cumulative_losses = cumsum(loss),
+    record = paste0(cumulative_wins, "-", cumulative_losses),
+    win_pct = cumulative_wins/(cumulative_wins + cumulative_losses)
+  ) %>%
+  ungroup() %>%
+  mutate(team_color = paste0("#", team_color))
+```
+
+```{r}
+# visualize records
+ggplot(wnba_team_records, aes(x = game_date, y = cumulative_wins, color = team_name)) +
+  geom_line() +
+  geom_vline(xintercept = as.Date("2025-09-11"), linetype = "dashed") +
+  theme_classic()
+```
+
+The black line represents the end of the regular season and beginning of the playoffs. The lines for each team end at varying points, depending on when they were eliminated. The Minnesota Lynx had the best record throughout the regular season, but then they were eliminated in the semi-finals. The Aces struggled in the first half of the season but then went on a massive winning streak which took them to the championships.
+
+Next, I found the teams that led the league in various shot percentages.
+
+```{r}
+# determine teams with the best avg shot percentages
+shot_percentages <- wnba_team_records %>%
+  select(field_goal_pct, free_throw_pct, three_point_field_goal_pct, team_name) %>%
+  group_by(team_name) %>%
+  summarise(
+    avg_field_goal = mean(field_goal_pct),
+    avg_free_throw = mean(free_throw_pct),
+    avg_three = mean(three_point_field_goal_pct),
+  )
+
+shot_percentages %>%
+  select(team_name, avg_field_goal) %>%
+  arrange(desc(avg_field_goal)) %>%
+  slice(1)
+
+shot_percentages %>%
+  select(team_name, avg_free_throw) %>%
+  arrange(desc(avg_free_throw)) %>%
+  slice(1)
+
+shot_percentages %>%
+  select(team_name, avg_three) %>%
+  arrange(desc(avg_three)) %>%
+  slice(1)
+```
+These shooting stats support the finding from the previous plot that the Lynx had the best regular season record.
+
+As a way of comparing how each team typically matched up against their opponents, I calculated the margins for various stats. I then took the averages and displayed the teams with the highest field goal, free throw, and three pointer margins and lowest turnover and foul margins.
+ 
+```{r} 
+# determine game margins for different performance stats
+margins <- wnba_team_records %>%
+  group_by(game_id) %>%
+  mutate(
+    field_margin = field_goals_made - rev(field_goals_made),
+    free_margin = free_throws_made - rev(free_throws_made),
+    three_margin = three_point_field_goals_made - rev(three_point_field_goals_made),
+    turnover_margin = turnovers - rev(turnovers),
+    foul_margin = fouls - rev(fouls)
+  ) %>%
+  ungroup() %>%
+  select(game_id, team_name, field_margin, free_margin, three_margin, turnover_margin, foul_margin, cumulative_wins) %>%
+  arrange(game_id) 
+
+# calculate average margins by team
+margin_avgs <- margins %>%
+  group_by(team_name) %>%
+  summarize(
+    avg_field_margin = mean(field_margin),
+    avg_free_margin = mean(free_margin),
+    avg_three_margin = mean(three_margin),
+    avg_turnover_margin = mean(turnover_margin),
+    avg_foul_margin = mean(foul_margin),
+    cumulative_wins = max(cumulative_wins)
+  ) 
+
+margin_avgs_pivoted <- margin_avgs %>%
+  pivot_longer(
+    cols = c(avg_field_margin, avg_free_margin, avg_three_margin, avg_turnover_margin, avg_foul_margin),
+    names_to = "margin_type",
+    values_to = "margin_value"
+  ) %>%
+  mutate(
+    margin_type = fct_relevel(margin_type, "avg_field_margin", "avg_free_margin", "avg_three_margin", "avg_turnover_margin", "avg_foul_margin")
+  ) %>%
+  mutate(
+    team_name = fct_reorder(team_name, desc(cumulative_wins))
+  )
+
+margin_avgs %>%
+  select(team_name, avg_field_margin) %>%
+  arrange(desc(avg_field_margin)) %>%
+  slice(1)
+
+margin_avgs %>%
+  select(team_name, avg_free_margin) %>%
+  arrange(desc(avg_free_margin)) %>%
+  slice(1)
+
+margin_avgs %>%
+  select(team_name, avg_three_margin) %>%
+  arrange(desc(avg_three_margin)) %>%
+  slice(1)
+
+margin_avgs %>%
+  select(team_name, avg_turnover_margin) %>%
+  arrange(avg_turnover_margin) %>%
+  slice(1)
+
+margin_avgs %>%
+  select(team_name, avg_foul_margin) %>%
+  arrange(avg_foul_margin) %>%
+  slice(1)
+```
+It is interesting to see a variety of teams represented in these stats. It make sense that the Lynx had the greatest field goal margin given that they had the best record.
+
+These faceted bar plots display the average game margins of these stats for each team.
+
+```{r}
+# visualize margins by team
+ggplot(margin_avgs_pivoted, aes(x = margin_type, y = margin_value, fill = margin_type)) +
+  geom_col() +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~team_name) +
+  theme_classic() +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  labs(x = "", y = "")
+```
+
+The best teams in the league, such as the Lynx, Aces, Dream, and Mercury generally have positive scoring margins and lower or negative turnover and foul margins. The worst teams in the league, such as the Sun, Sky, and Wings display the opposite trends.
+
+### Play-By-Play Dataset
+
+```{r}
+# get dimensions
+dim(wnba_pbp)
+```
+
+For the play-by-play dataset, I made a variable for the type of shot.
+
+```{r}
+# create shot type variable
+wnba_pbp <- wnba_pbp %>%
+  filter(shooting_play) %>%
+  mutate(shot_type = case_when(
+    str_detect(type_text, "Jump Shot") ~ "Jump Shot",
+    str_detect(type_text, "Layup Shot") | str_detect(type_text, "Layup") ~ "Layup Shot",
+    str_detect(type_text, "Free Throw") ~ "Free Throw",
+    str_detect(type_text, "Hook Shot") | str_detect(type_text, "Hook") ~ "Hook Shot",
+    str_detect(type_text, "Tip Shot") ~ "Tip Shot",
+    str_detect(type_text, "Dunk") ~ "Dunk Shot"
+  )) 
+```
+
+This barplot displays the frequencies of different shot types, differentiated by whether or not the shot was made.
+
+```{r}
+wnba_pbp %>%  
+  filter(game_id != 401781604) %>% #filter out All Star game
+  ggplot(aes(y = shot_type, fill = scoring_play)) +
+  geom_bar() +
+  theme_classic() +
+  labs(x = "count", y = "shot type", fill = "scoring play")
+```
+Jumpshots are by far the most common shot, but they are not the easiest to make. Free throws and layups, which make up the majority of the rest of shots, are easier to make.

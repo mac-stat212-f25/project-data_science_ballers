@@ -1,10 +1,874 @@
 ---
-title: "Report"
+title: "Performance Analysis of the 2025 WNBA Season"
 ---
 
-Your report goes here.
+## Motivation
+
+In 2019, women made up 44% of all sports participants, but received less than 5% of sports media coverage and less than 1% of total sports sponsorship dollars ([Togethxr](https://www.togethxr.com/blogs/guides/the-growth-of-womens-sports?srsltid=AfmBOopvOkm4zPS1j8-e_HXHZyQNFjiH1noGQqqb7Bg6rkafPyxxzZE_)).
+In recent years, however, women’s sports have experienced a rapid rise in popularity.
+This has coincided with the growth of the Women’s National Basketball Association (WNBA).
+The 2025 season set new records for both attendance and viewership.
+The league, which currently consists of 13 teams, has announced that it plans to expand to 18 teams by 2030.
+The growth of the WNBA has also created new opportunities for women off the court with more women occupying positions as media commentators, analysts, coaches, and executives.
+However, there is still work to be done.
+Although the WNBA is receiving more attention, athletes aren't being compensated at an equivalent rate.
+Players, uniting under slogans like "Pay Us What You Owe Us," are demanding a larger cut of the league's increased media revenue.
+As student-athletes, we were interested in exploring the 2025 WNBA season, analyzing performance at the team and individual levels and how it relates to player earnings and popularity.
+
+![](figures/valks_fans.jpg){fig-align="center"}
+
+<center>Passionate fans of the Golden State Valkyries whose inaugural season was 2025 ([Beth LaBerge/KQED](https://www.kqed.org/news/12056563/better-than-i-ever-dreamed-valkyries-fans-reflect-on-historic-first-season)).</center>
+
+## Research Question
+
+Our primary research question is: **what factors were associated with individual and team success throughout the 2025 WNBA season?**
+
+In this analysis, we present insightful ways of measuring and visualizing team and player performance.
+We incorporate machine learning for the purposes of determining the best predictors of game outcome and validating our summaries of player performance.
+We also explore the relationships between player performance and between salary and social media presence.
+
+## Background
+
+The WNBA is the professional women’s basketball league in the United States.
+There are 13 teams in the WNBA, and there are 12 rostered players (players that are actively playing) on each team.
+The entire league is split into two conferences, the Eastern and Western Conferences.
+Every team plays 44 games in a regular season, most games against teams in their conference but some outside.
+After the regular season ends, the best teams move onto an elimination tournament called the playoffs.
+The playoffs include the top 8 teams in either conference, based on win-loss record.
+These teams compete in a series of games where losing teams are gradually eliminated until only one remains.
+The final winner is crowned the WNBA champion.
+
+Because our project analyzes team and individual performance, it is important to understand the common statistics that help measure performance:
+
+-   Points per game (PPG): total number of points scored per game
+
+-   Shots: total number of shots taken, including missed shots
+
+-   Assists: passes made that directly led to a point scored
+
+-   Blocks: blocking and opponents shot to prevent a point
+
+-   Steals: taking the ball away from the opponent before they can take a shot
+
+-   Rebounds: gaining possession of the ball after a missed shot (offensive or defensive)
+
+-   Turnovers: the opposite of steals; losing the ball to the opponent before they take a shot
+
+-   Record: this is the total amount of wins and losses that a team accumulates
+
+## Data
+
+Wehoop is an R package for analyzing women’s college and professional basketball data.
+It is a scraping and aggregating interface for ESPN’s women’s college basketball and WNBA statistics developed by Saiem Gilani and Geoff Hutchinson.
+In this analysis, we use wnba play-by-play, team box score, and player box score datasets from 2025.
+The play-by-play dataset (121,342 x 62) contains every play from every game.
+It has text explaining the type of play (layup, rebound, foul, substitution, free throw, etc.) and players involved.
+It also has timestamps, player coordinates, and basic game information.
+The team box score dataset (624 x 57) has information about team performance for every game, including total shots attempted and made, fouls, rebounds, turnovers, and more.
+It also contains useful information for creating visualizations such as team colors and logos.
+The player box score dataset (7,140 x 57) contains similar in-game statistics as the team box score dataset but broken down by individual.
+It also has basic player information including position and whether or not the player is a starter.
+Across all datasets, very little cleaning was required apart from the removal of the All Star game.
 
 ```{r}
-# a test code chunk
+# load necessary packages
+library(wehoop)
+library(tidyverse)
+library(ggrepel)
+library(glmnet)
+library(tidymodels)
+tidymodels_prefer()
+library(robotstxt)
+library(rvest)
+library(factoextra)
+library(reshape2)
+library(knitr)
+library(kableExtra)
+library(plotly)
+
+# load wehoop data
+wnba_pbp <- wehoop::load_wnba_pbp()
+wnba_team_box <- wehoop::load_wnba_team_box()
+wnba_player_box <- wehoop::load_wnba_player_box()
 ```
 
+Salary information for each player was scraped from [herhoopstats.com](https://herhoopstats.com/salary-cap-sheet/wnba/team/2025/atlanta-dream-11eaecc7-356c-1364-b611-2362f5011b0b/) and assembled into a dataframe (255 x 5).
+The information was independently sourced by Richard Cohen.
+To retrieve the data, we created a function that iterates through each team’s 2025 Salary Cap Sheet page and extracts the player name, team name, salary value, and contract type.
+The data had to be cleaned so that it was fit for analysis and could be joined with other datasets.
+Missing values were populated with NA and categories were collapsed and recoded.
+Additionally, some players had multiple contracts with the same or different teams, which was addressed on a case by case basis in later analysis.
+
+```{r}
+# scrape herhoopstats.com for salary data
+start_url <- "https://herhoopstats.com/salary-cap-sheet/wnba/team/2025/"
+team_urls <- c(
+  "atlanta-dream-11eaecc7-356c-1364-b611-2362f5011b0b",    
+  "chicago-sky-11eaecc7-355f-1c4a-b611-2362f5011b0b",     
+  "connecticut-sun-11eaecc7-3562-4a0a-b611-2362f5011b0b",     
+  "dallas-wings-11eaecc7-3583-13fc-b611-2362f5011b0b",     
+  "golden-state-valkyries-11efb2ba-e2c6-f520-8806-9a93b15b3fec", 
+  "indiana-fever-11eaecc7-3565-c004-b611-2362f5011b0b",
+  "las-vegas-aces-11eaecc7-3575-e2fe-b611-2362f5011b0b",
+  "los-angeles-sparks-11eaecc7-3579-2ce8-b611-2362f5011b0b",
+  "minnesota-lynx-11eaecc7-357c-772c-b611-2362f5011b0b",
+  "new-york-liberty-11eaecc7-356f-5524-b611-2362f5011b0b",
+  "phoenix-mercury-11eaecc7-357f-c1ca-b611-2362f5011b0b",
+  "seattle-storm-11eaecc7-3572-876c-b611-2362f5011b0b",
+  "washington-mystics-11eaecc7-3568-d154-b611-2362f5011b0b"
+)
+full_urls <- str_c(start_url, team_urls, "/")
+
+salary_info <- function(url) {
+  Sys.sleep(1)
+  webpage <- read_html(url)
+
+  team <- webpage %>%
+    html_element("h1.salary_title") %>%
+    html_text(trim = TRUE)
+  
+  rows <- webpage %>%
+    html_elements("tbody tr")
+
+  map_df(rows, function(row) {
+
+    player <- row %>%
+      html_element("td.salary_player_name a") %>%
+      html_text(trim = TRUE)
+
+    salary_cell <- row %>%
+      html_elements("td.salary_cap_hit") %>%
+      .[1]
+
+    salary <- salary_cell %>%
+      html_attr("sorttable_customkey") %>%
+      as.numeric()
+
+    contract_type <- salary_cell %>%
+      html_attr("title") %>%
+      na_if("")
+
+    tibble(
+      name = player,
+      team = team,
+      salary = salary,
+      contract = contract_type
+    )
+  })
+}
+
+all_pages <- purrr::map(full_urls, salary_info)
+salary_df <- bind_rows(all_pages)
+
+# clean up salary dataframe
+salary_df$salary[salary_df$salary == 0] <- NA
+salary_df <- salary_df %>%
+  mutate(contract = str_extract(contract, "^[^<]*")) %>%
+  mutate(team = str_extract(team, "(?<=2025 ).*")) %>%
+  mutate(team = str_extract(team, ".*(?= Salary Cap Sheet)")) %>%
+  mutate(team_name = case_when(
+    team == "Atlanta Dream" ~ "Dream",
+    team == "Chicago Sky" ~ "Sky",
+    team == "Connecticut Sun" ~ "Sun",
+    team == "Dallas Wings" ~ "Wings", 
+    team == "Golden State Valkyries" ~ "Valkyries",
+    team == "Indiana Fever" ~ "Fever",
+    team == "Las Vegas Aces" ~ "Aces",
+    team == "Los Angeles Sparks" ~ "Sparks",
+    team == "Minnesota Lynx" ~ "Lynx",
+    team == "New York Liberty" ~ "Liberty",
+    team == "Phoenix Mercury" ~ "Mercury",
+    team == "Seattle Storm" ~ "Storm",
+    team == "Washington Mystics" ~ "Mystics")) %>%
+  mutate(contract = 
+    fct_collapse(contract,
+      "Protected Veteran" = c("Protected Veteran"),
+      "Unprotected" = c("Unprotected"),
+      "7-Day Contract" = c("Complete 7-Day Contract"),
+      "Hardship Contract" = c("Complete Hardship Contract", "Active Hardship Contract"), 
+      "Waived" = c("Waived", "Waived Protected Veteran"),
+      "Protected Rookie Scale" = c("Protected Rookie Scale"),
+      "Buyout" = c("Buyout")
+    )) %>% 
+  mutate(across(where(is.numeric), ~ ifelse(is.nan(.), NA, .)))
+```
+
+Social media popularity was measured by considering the number of Instagram followers each player has.
+We scraped [revoltv.com](https://www.revolt.tv/article/wnba-players-with-the-most-instagram-followers) to create a 10 by 2 dataframe of the top 10 most followed players and their follower count.
+The data had to be cleaned to extract the players’ names and total number of followers.
+For players not in the top 10 most followed list, we manually added their follower count by looking up their accounts on the app.
+
+```{r}
+# social media data
+url <- "https://www.revolt.tv/article/wnba-players-with-the-most-instagram-followers"
+
+page <- read_html(url)
+
+# extract elements
+headers <- page %>%
+  html_elements("h2 strong") %>%
+  html_text2
+
+# clean data frame
+most_followers <- headers %>%
+  str_remove("^\\d+\\.\\s*") %>%
+  str_match("^(.*?)\\s*\\((.*)\\)$") %>% 
+  as_tibble() %>%
+  select(V2, V3) %>%
+  mutate(V3 = V3 %>%                  
+           str_remove("over\\s*") %>%           
+           str_replace(" million", "e6") %>%    
+           as.numeric()) %>%
+filter(V2 != "Candace Parker") %>%
+  arrange(desc(V3)) %>%
+  slice(1:10) 
+
+colnames(most_followers) <- c("athlete_display_name", "follower_count")
+
+# create variable for followers in millions
+most_followers <- most_followers %>%
+  mutate(followers_millions = follower_count/1000000)
+```
+
+## Analysis and Insights
+
+#### Team Performance
+
+We began our analysis by looking into team performance, identifying the strongest and weakest teams in the league.
+
+###### Season records
+
+As a starting point, we made a visualization of the progression of each team's record, represented by cumulative wins, over the course of the season.
+This provides insight into how team's performed relative to each other at each point in the season, information that cannot be derived from their records alone.
+A grey dashed line was added to mark the end of the regular season and beginning of the playoffs.
+The lines for each team end at varying points, depending on if they made the playoffs and when they were eliminated.
+
+```{r}
+# determine records for each team
+wnba_team_records <- wnba_team_box %>%
+  # remove all star teams
+  filter(team_name != "TEAM CLARK", team_name != "TEAM COLLIER") %>% 
+  mutate(
+    win = ifelse(team_winner == TRUE, 1, 0),
+    loss = ifelse(team_winner == FALSE, 1, 0)
+  ) %>%
+  group_by(team_name) %>%
+  arrange(team_name, game_date) %>% 
+  mutate(
+    cumulative_wins = cumsum(win),
+    cumulative_losses = cumsum(loss),
+    record = paste0(cumulative_wins, "-", cumulative_losses),
+    win_pct = cumulative_wins/(cumulative_wins + cumulative_losses)
+  ) %>%
+  ungroup() %>%
+  mutate(team_color = paste0("#", team_color))
+
+# team color hex codes
+team_colors <- wnba_team_box %>%
+  distinct(team_name, team_color) %>%
+  mutate(team_color = paste0("#", team_color)) %>%
+  deframe()
+
+# team name labels
+df_labels <- wnba_team_records %>%
+  group_by(team_name) %>%
+  filter(game_date == max(game_date)) %>%
+  ungroup() 
+
+# visualize records
+ggplot(wnba_team_records, aes(x = game_date, y = cumulative_wins, 
+  group = team_name, color = team_color)) +
+  geom_line(size = 1.2) +
+  scale_color_identity() + 
+  geom_text_repel(data = df_labels, aes(label = team_name),
+    nudge_x = 3, hjust = 0, direction = "y", segment.color = NA, 
+    size = 3.5, fontface = "bold") +
+  theme_classic() +
+  expand_limits(x = max(wnba_team_records$game_date) + 12) +
+  theme(legend.position = "none") +
+  geom_vline(xintercept = as.Date("2025-09-11"), 
+    linetype = "dashed", color = "darkgrey") +
+  labs(x = "", y = "cumulative wins", title = "Season Wins by Team") +
+  annotate("text", x = as.Date("2025-09-9"), y = 38, 
+    label = str_wrap("End of Regular Season", 15), color = "grey40", 
+    size = 2.5, hjust = 1)
+```
+
+This plot shows that the Minnesota Lynx had the best record throughout the regular season as they were consistently gapping the rest of the league in wins.
+Despite their winning record, the Lynx were eliminated in the semi-finals of the playoffs.
+The Las Vegas Aces struggled in the first half of the season but then went on a massive winning streak which took them to the championships.
+A few teams, the Connecticut Sun, Chicago Sky, and Dallas Wings, were consistently at the bottom of the standings and did not qualify for the playoffs.
+
+###### Game Margins
+
+As a way of investigating what factors contribute to the success of dominant teams and downfall of weaker teams, game margins were calculated for various statistics, including field goals, free throws, three pointers, turnovers, and fouls.
+For example, if a team made two more field goals than their opponent in a game, that would be a margin of +2.
+If they had one less turnover than their opponent, that would be -1.
+The averages of these margins across all games were calculated for each team, providing a window into how they typically match up against opponents.
+
+```{r}
+# determine game margins for different performance stats
+margins <- wnba_team_records %>%
+  group_by(game_id) %>%
+  mutate(
+    field_margin = field_goals_made - rev(field_goals_made),
+    free_margin = free_throws_made - rev(free_throws_made),
+    three_margin = three_point_field_goals_made - rev(three_point_field_goals_made),
+    turnover_margin = turnovers - rev(turnovers),
+    foul_margin = fouls - rev(fouls)) %>%
+  ungroup() %>%
+  select(game_id, team_name, field_margin, free_margin, three_margin, 
+    turnover_margin, foul_margin, cumulative_wins) %>%
+  arrange(game_id) 
+
+# calculate average margins by team
+margin_avgs <- margins %>%
+  group_by(team_name) %>%
+  summarize(
+    avg_field_margin = mean(field_margin),
+    avg_free_margin = mean(free_margin),
+    avg_three_margin = mean(three_margin),
+    avg_turnover_margin = mean(turnover_margin),
+    avg_foul_margin = mean(foul_margin),
+    cumulative_wins = max(cumulative_wins)
+  ) 
+
+# pivot to longer format for plotting
+margin_avgs_pivoted <- margin_avgs %>%
+  pivot_longer(
+    cols = c(avg_field_margin, avg_free_margin, avg_three_margin, 
+        avg_turnover_margin, avg_foul_margin),
+    names_to = "margin_type",
+    values_to = "margin_value"
+  ) %>%
+  mutate(
+    margin_type = fct_relevel(margin_type, "avg_field_margin", "avg_free_margin", 
+        "avg_three_margin", "avg_turnover_margin", "avg_foul_margin")) %>%
+  mutate(
+    team_name = fct_reorder(team_name, desc(cumulative_wins)))
+
+# visualize margins by team
+ggplot(margin_avgs_pivoted, aes(x = margin_type, y = margin_value, fill = margin_type)) +
+  geom_col() +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~team_name, nrow = 2) +
+  theme_classic() +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  labs(x = "", y = "") +
+  theme(
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(), 
+    legend.title = element_text(size = 10),
+    legend.text = element_text(size = 8),   
+    legend.key.size = unit(0.5, "cm")  ) +
+  labs(x = "", y = "", fill = "Average Game Margins", 
+    title = "Typical Team Performances Against Opponents") +
+  scale_fill_manual(
+    values = c("avg_field_margin" = "#3c286e", "avg_free_margin" = "#5091cd", 
+      "avg_three_margin" = "#e31837", "avg_turnover_margin" = "#2c5235", 
+      "avg_foul_margin" = "#f05023"),
+    labels = c("avg_field_margin" = "Field Goals", "avg_free_margin" = "Free Throws",
+      "avg_three_margin" = "Three Pointers", "avg_turnover_margin" = "Turnovers", 
+      "avg_foul_margin" = "Fouls"))
+```
+
+These bar plots show that the best teams in the league, such as the Lynx, Aces, Dream, and Mercury generally have positive scoring margins and lower or negative turnover and foul margins.
+The worst teams in the league, such as the Sun, Sky, and Wings display the opposite trends.
+This suggests that the abilities of a team to outscore and play cleaner basketball than their opponents are strong determinants of their success in the WNBA.
+
+###### Predicting Season Outcomes
+
+Machine learning algorithms provide another technique for determining factors that contribute to team success.
+We built a classification model of game outcome (win or loss) using LASSO, an algorithm which shrinks coefficients toward 0.
+By kicking out predictors, LASSO helps identify the features that are most important to our model.
+
+We trained our LASSO model on all of the regular season games, and tested it on the playoff games.
+
+```{r, results='hide'}
+# remove columns that are unnecessary for predicting game outcomes
+wnba_team_lasso <- wnba_team_box %>%
+  # filter out all star game
+  filter(game_id != 401781604) %>%
+  select(-season, -game_date_time, -team_id, -team_uid, -team_slug, -team_location, 
+      -team_abbreviation, -team_display_name, -team_short_display_name, -team_color, 
+      -team_alternate_color, -team_logo, -team_score, -opponent_team_id, 
+      -opponent_team_uid, -opponent_team_slug, -opponent_team_location, 
+      -opponent_team_abbreviation, -opponent_team_display_name, 
+      -opponent_team_short_display_name, -opponent_team_color, 
+      -opponent_team_alternate_color, -opponent_team_logo, -opponent_team_score) %>%
+  mutate(
+    team_winner = factor(team_winner),
+    largest_lead = as.numeric(largest_lead),
+    fast_break_points = as.numeric(fast_break_points),
+    turnover_points = as.numeric(turnover_points)) %>% 
+  mutate(season_day = as.numeric(game_date - as.Date("2025-05-16"))) %>%
+  select(-game_date)
+
+# create training dataset with all games before playoffs
+lasso_training <- wnba_team_lasso %>%
+  filter(season_type != 3) %>%
+  select(-game_id, -season_type)
+
+# create test dataset with playoffs
+lasso_test <- wnba_team_lasso %>%
+  filter(season_type == 3) %>%
+  select(-game_id, -season_type)
+
+# model specification
+set.seed(212)
+model_spec <- logistic_reg() %>%
+  set_mode("classification") %>% 
+  set_engine("glmnet") %>%
+  set_args(mixture = 1, penalty = tune())
+
+# variable recipe
+data_rec <- recipe(team_winner ~ . , data = lasso_training) %>%
+  step_novel(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors())
+
+# workflow (algorithm + recipe)
+model_wf <- workflow() %>% 
+  add_recipe(data_rec) %>%
+  add_model(model_spec) 
+
+# estimate 50 LASSO models
+multiple_models <- model_wf %>%
+ tune_grid(
+    grid = grid_regular(
+      penalty(range = c(-5, 3)),     
+      levels = 50
+    ),
+    resamples = vfold_cv(lasso_training, v = 10),
+    metrics = metric_set(accuracy)
+ )
+
+# determine parsimonious parameter
+parsimonious_param <- multiple_models %>%   
+  select_by_one_std_err(metric = "accuracy", desc(penalty))
+
+# determine best (highest accuracy) parameter
+best_param <- multiple_models %>%   
+  select_best(metric = "accuracy")
+
+# build final parsimonious model
+final_model <- model_wf %>% 
+  finalize_workflow(parsimonious_param) %>% 
+  fit(data = lasso_training)
+
+# print coefficients
+final_model %>%
+  tidy() %>%
+  filter(estimate != 0)
+
+# get training accuracy
+multiple_models %>% 
+  collect_metrics() %>%
+  filter(penalty == parsimonious_param$penalty)
+```
+
+The predictors included in our final model and their coefficients can be seen in the equation below.
+
+![](figures/LASSO_eq.png){fig-align="center"}
+
+Fouls and turnovers both had negative coefficients, meaning they decrease the odds of a team winning, which supports our insights from the previous visualization.
+
+Our final model had a lambda value of 0.027 and a cross-validated accuracy of 0.87.
+This means that our model correctly predicts the game outcome for 86.61% of new games.
+
+```{r}
+# use model to predict playoff game outcomes
+test_classifications <- final_model %>% 
+  augment(new_data = lasso_test) 
+
+# create confustion matrix
+test_confusion <- final_model %>%
+  augment(new_data = lasso_test) %>%
+  conf_mat(truth = team_winner, estimate = .pred_class)
+
+# print metrics
+# summary(test_confusion, event_level = "second")
+
+# represent confusion matrix as mosaic plot
+test_confusion %>% 
+  autoplot() +
+  aes(fill = rep(colnames(test_confusion$table), ncol(test_confusion$table))) + 
+  theme(legend.position = "none") +
+  labs(title = "Confusion Matrix for Playoff Win Predictions") +
+  scale_fill_manual(values = c("#3c286e","#f05023")) 
+```
+
+Our model correctly predicted the outcomes of the playoff games 79.17% of the time.
+As seen in the confusion matrix above, the model correctly predicted wins (true) and losses (false) in similar proportions.
+Almost all of the outcomes incorrectly predicted by the model were games in which a team with a massive lead ended up losing.
+For example, in the second game of the Lynx-Mercury semi-finals series, the Lynx were up by 20 at one point, but ended up losing.
+The model incorrectly predicted that the Lynx won this game.
+This demonstrates that although the variables outlined above are generally strong predictors of team success, upsets can happen.
+
+#### Individual Performance
+
+Season outcomes and team performance stem from the performance of individual players.
+In the next component of our analysis, we developed and validated a metric for determining the best players in the league.
+
+###### Player Impact Estimate
+
+Player Impact Estimate (PIE) is a performance metric developed by the NBA to evaluate a player's contribution to their team's success in a specific basketball game.
+It includes both offensive and defensive metrics and balance positive impacts against negative impacts.
+10 is considered to be a solid PIE score.
+The equation used to calculate PIE can be seen below.
+
+![](figures/PIE_eq.png){fig-align="center"}
+
+We calculated PIE for each player in every game and then calculated the season average for each player.
+The players with the 10 highest season average PIE scores are listed below.
+
+```{r}
+# calculate game totals for PIE metric calculation
+game_totals <- wnba_team_box %>%
+  # filter out all star game
+  filter(game_id != 401781604)%>%
+  group_by(game_id) %>%
+  summarize(
+    total_points = sum(team_score),
+    total_field_goals_made = sum(field_goals_made),
+    total_free_throws_made = sum(free_throws_made),
+    total_field_goals_attempted = sum(field_goals_attempted),
+    total_free_throws_attempted = sum(free_throws_attempted),
+    total_defensive_rebounds = sum(defensive_rebounds),
+    total_offensive_rebounds = sum(offensive_rebounds),
+    total_assists = sum(assists),
+    total_steals = sum(steals),
+    total_blocks = sum(blocks),
+    total_fouls = sum(fouls),
+    total_turnovers = sum(turnovers)
+  ) %>%
+  ungroup()
+
+# calculate PIE for each player in every game
+player_game_totals <- wnba_player_box %>%
+  full_join(game_totals, by = "game_id") %>%
+  select("game_id", "game_date", "athlete_id", "athlete_display_name", "team_id", 
+      "team_name", "points", "field_goals_made", "free_throws_made", 
+      "field_goals_attempted", "free_throws_attempted", "defensive_rebounds",
+      "offensive_rebounds", "assists", "steals", "blocks", "fouls", "turnovers",
+      "total_points", "total_field_goals_made", "total_free_throws_made",
+      "total_field_goals_attempted", "total_free_throws_attempted",
+      "total_defensive_rebounds", "total_offensive_rebounds", "total_assists",
+      "total_steals", "total_blocks", "total_fouls", "total_turnovers") %>%
+  group_by(game_id, game_date, athlete_id, athlete_display_name, team_id, team_name) %>%
+  summarize(player_PIE = ((points + field_goals_made + free_throws_made -
+      field_goals_attempted - free_throws_attempted + defensive_rebounds +
+      (offensive_rebounds/2) + assists + steals + (blocks/2) - fouls - turnovers) /
+      (total_points + total_field_goals_made + total_free_throws_made -
+      total_field_goals_attempted - total_free_throws_attempted + 
+      total_defensive_rebounds + (total_offensive_rebounds/2) + total_assists + 
+      total_steals + (total_blocks/2) - total_fouls - total_turnovers)) * 100) 
+
+# create dataset of season avg PIE scores for each player
+PIE <- player_game_totals %>%
+  group_by(athlete_display_name, team_name) %>%
+  summarize(avg_PIE = mean(player_PIE, na.rm = TRUE)) 
+
+# determine players with 10 highest season avg PIE scores
+top10_pie <- PIE %>%
+  arrange(desc(avg_PIE)) %>%
+  head(10) 
+
+top10_pie %>%
+  kable(
+    col.names = c("Player", "Team", "PIE"),
+    align = "lll"
+  ) %>%
+  kable_styling()
+```
+
+###### Principle Component Analysis
+
+As an alternative method of assessing player performance, we used principle component analysis (PCA), a machine learning technique for reducing the dimensionality of data.
+It turns a set of correlated features into a smaller set of uncorrelated features, called principal components (PCs), which preserve the majority of information in the data.
+This is useful for analysis as we have many in-game stats that could be used to determine player performance.
+
+```{r}
+# prepare player dataset for PCA
+PCA_player <- wnba_player_box %>%
+  filter(game_id != 401781604) %>%
+  group_by(athlete_display_name, team_name) %>%
+  mutate(player_unique = paste0(athlete_display_name, " (", team_name, ")")) %>%
+  ungroup() %>%
+  group_by(player_unique, team_name) %>%
+  summarize(
+      athlete_display_name = first(athlete_display_name),
+      avg_minutes = mean(minutes, na.rm = TRUE),
+      avg_field_goals_made = mean(field_goals_made, na.rm = TRUE),
+      avg_field_goals_attempted = mean(field_goals_attempted, na.rm = TRUE),
+      avg_threes_made = mean(three_point_field_goals_made, na.rm = TRUE),
+      avg_threes_attempted = mean(three_point_field_goals_attempted, na.rm = TRUE),
+      avg_free_throws_made = mean(free_throws_made, na.rm = TRUE),
+      avg_free_throws_attempted = mean(free_throws_attempted, na.rm = TRUE),
+      avg_free_throws_attempted = mean(free_throws_attempted, na.rm = TRUE),
+      avg_ppg = mean(points, na.rm = TRUE),
+      avg_blocks = mean(blocks, na.rm = TRUE),
+      avg_rebounds = mean(rebounds, na.rm = TRUE),
+      avg_offensive_rebounds = mean(offensive_rebounds, na.rm = TRUE),
+      avg_defensive_rebounds = mean(offensive_rebounds, na.rm = TRUE),
+      avg_assists = mean(assists, na.rm = TRUE),
+      avg_steals = mean(steals, na.rm = TRUE),
+      avg_turnovers = mean(turnovers, na.rm = TRUE),
+      avg_fouls = mean(fouls, na.rm = TRUE),
+      games_started = sum(starter, na.rm = TRUE),
+      games_ejected = sum(ejected, na.rm = TRUE), 
+      games_did_not_play = sum(did_not_play, na.rm = TRUE),
+      mean_plus_minus = mean(as.numeric(plus_minus), na.rm = TRUE),
+      position = names(which.max(table(athlete_position_name, useNA = "no"))),
+      wins = sum(team_winner),
+      avg_team_score = mean(team_score)) %>%
+  left_join(salary_df, by = join_by(
+      athlete_display_name == name, team_name == team_name)) %>%
+  left_join(PIE, by = join_by(
+      athlete_display_name == athlete_display_name, team_name == team_name)) %>% 
+  mutate(across(where(is.numeric), ~ ifelse(is.nan(.), NA, .))) %>%
+  drop_na()
+
+# remove duplicate players
+PCA_player <- PCA_player[-c(5, 7, 9, 10, 15, 21, 30, 41, 47, 49, 72, 76, 78, 79, 98, 99, 116, 117, 138, 165, 189), ] 
+
+# create unique names for athletes as some athletes played on multiple teams
+PCA_player <- PCA_player %>%
+  select(-athlete_display_name) %>%
+  column_to_rownames("player_unique")
+
+# create dummy variables for categorical features
+PCA_player_dummy <- data.frame(model.matrix(~ . - 1, PCA_player))
+
+# remove variables with zero variance
+PCA_player_dummy <- PCA_player_dummy %>%
+  select(-contractBuyout, -games_ejected)
+
+# standardize features and perform pca
+pca_results <- prcomp(PCA_player_dummy, scale = TRUE, center = TRUE)
+
+melt(pca_results$rotation) %>%
+  filter(Var2 == "PC1") %>% 
+  ggplot(aes(x = Var1, y = value)) +
+    geom_bar(stat = "identity") +
+    labs(y = "Loadings", x = "Original Features", title = "Contributions of Orignal Features to PC1") +
+    theme_minimal() +
+    theme(legend.position = "none", axis.text.x = element_text(angle = 90, hjust = 1)) 
+```
+
+The first PC captures the most variability in the data.
+As seen in this bar chart, the original features that contributed the most to PC1 are in-game statistics, such as shooting percentages and rebounds.
+This suggests that PC1 is mainly a summary of player performance.
+
+```{r}
+# plot PC1 scores (x-axis) vs PC2 scores (y-axis) of all data points and color by PIE
+p <- fviz_pca_ind(
+  pca_results, 
+  repel = TRUE, 
+  label = "none",
+  col.ind = PCA_player$avg_PIE, 
+  gradient.cols = c("lightyellow", "red"),
+  legend.title = "Average PIE",
+  title = "PCA Score Plot by PIE"
+)
+
+pca_df <- p$data
+
+# Add player names to hover text (assuming column is 'player')
+pca_df$player <- row.names(PCA_player)
+
+# Rebuild plot with 'text' aesthetic
+p2 <- ggplot(pca_df, aes(x = x, y = y)) +
+  geom_point(aes(color = Col., text = player)) +
+  scale_color_gradient(low = "lightyellow", high = "red") +
+  labs(title = "PCA Score Plot by PIE", color = "Average PIE", x = "Dim1 (23.2%)", y = "Dim2 (7.1%)") +
+  theme_minimal()
+
+# Convert to interactive plotly with hover
+ggplotly(p2, tooltip = "text")
+```
+
+PC1 (x-axis) is well aligned with PIE and players with high PC1 scores also tend to have high PIE scores.
+This validates our use of PIE as a robust and holistic measure of player performance.
+
+#### Performance and Success
+
+In the final portion of our analysis, we investigated how a player's performance relates to other measures of success such as salary and recognition.
+
+###### Salary and Performance
+
+The players with the 10 highest salaries can be seen in the table below.
+
+```{r}
+# determine players with top 10 highest salaries
+top10_salary <- salary_df %>%
+  arrange(desc(salary)) %>%
+  select(name, team_name, salary, contract) %>%
+  head(10) 
+
+top10_salary %>%
+  kable(
+    col.names = c("Player", "Team", "Salary", "Contract"),
+    align = "lll"
+  ) %>%
+  kable_styling()
+```
+
+Interestingly, Breanna Stewart and Alyssa Thomas are the only two players in this table who also appeared in the PIE Top Ten.
+
+Visualizing the relationship between PIE and salary by contract type provides more nuanced insights.
+
+```{r}
+# join salary and player performance datasets
+player_salary_stats <- wnba_player_box %>%
+  filter(game_id != 401781604) %>%
+  group_by(athlete_display_name, team_name) %>%
+  left_join(salary_df, by = join_by(
+      athlete_display_name == name, team_name == team_name)) %>%
+  select(athlete_display_name, team_name, salary, contract) %>%
+  left_join(PIE, by = join_by(
+      athlete_display_name == athlete_display_name, team_name == team_name)) %>%
+  drop_na() %>%
+  mutate(salary_thousands = salary/1000) %>%
+  mutate(player_unique = paste0(athlete_display_name, " (", team_name, ")"))
+
+p <- ggplot(player_salary_stats, aes(x = avg_PIE, y = salary_thousands, color = contract, 
+  text = player_unique)) +
+  geom_point() +
+  geom_smooth(aes(group = contract, color = contract), method = "lm", se = FALSE) +
+  theme_classic() +
+  labs(x = "Player Impact Estimate (Season Average)", y = "Salary in Thousands of Dollars", 
+      color = "Contract Type", title = "Player Salaries by Performance and Contract Type") +
+  scale_color_manual(
+      values = c("Hardship Contract" = "#3c286e", "Unprotected" = "#5091cd", 
+          "Waived" =  "#2c5235", "Protected Veteran" = "#e31837", 
+          "Protected Rookie Scale" = "#f05023", "7-Day Contract" = "#86cebc"),
+      labels = c("Hardship Contract", "Unprotected", "Waived", "Protected Veteran", 
+          "Protected Rookie Scale", "7-Day Contract"))
+
+ggplotly(p, tooltip = "text")
+```
+
+The relationship between player performance and salary appears to be strongest for protected veterans, experienced players with guaranteed salaries.
+The trends for unprotected and waived players also appear to be positive, but this may be due to the several high outliers.
+The flat slope for protected rookies makes sense given that their salaries are generally standardized.
+Players with 7-day or hardship contracts typically are only on the roster for a portion of the season, so their salaries also tend to be static.
+
+###### Popularity and Performance
+
+As a measure of player popularity and recognition, we looked into the Instagram following of a subset of players.
+The most followed players on Instagram can be seen in the table below.
+
+```{r}
+# players with top 10 highest PIEs
+player_game_totals_social <- player_game_totals %>%
+  group_by(athlete_display_name, team_name) %>%
+  summarize(avg_PIE = mean(player_PIE, na.rm = TRUE)) %>%
+  na.omit()
+  
+player_game_totals_social_top <- player_game_totals_social %>% 
+  ungroup() %>%
+  arrange(desc(avg_PIE)) %>%
+  slice(1:10)
+
+# players with top 10 highest follower counts
+most_followers %>%
+  select(athlete_display_name, followers_millions) %>%
+  kable(col.names = c("Player", "Followers in Millions"),
+        align = "ll") %>%
+  kable_styling()
+```
+
+Three of these players also appeared in the top ten PIE table.
+As a way of visualizing the relationship between player performance and social media following, the players with the 10 highest PIE scores and 10 highest Instagram followers were plotted with respect to their PIE and Instagram follower percentiles.
+A hype score was determined by calculating the difference between the two percentiles.
+Players in red are more popular relative to their performance while players in blue are less popular relative to their performance.
+
+```{r}
+# join PIE and follower datasets
+top_followers_stats <- most_followers %>%
+  left_join(player_game_totals_social, by = "athlete_display_name") %>%
+  select(athlete_display_name, team_name, avg_PIE, follower_count)
+
+missing_PIE <- player_game_totals_social_top %>%
+  filter(!athlete_display_name %in% top_followers_stats$athlete_display_name)
+
+# manual follower counts
+manual_followers <- tibble(
+  athlete_display_name = missing_PIE$athlete_display_name,
+  follower_count = c(91600, 340000, 494000, 212000, 383000, 183000, 196000)
+)
+
+missing_PIE <- missing_PIE %>%
+  left_join(manual_followers, by = "athlete_display_name")
+
+final_dataset <- bind_rows(top_followers_stats, missing_PIE) %>%
+  distinct(athlete_display_name, .keep_all = TRUE) %>%
+  arrange(desc(avg_PIE)) 
+
+final_dataset <- final_dataset %>%
+  mutate(follower_pct = percent_rank(follower_count)) %>%
+  mutate(PIE_pct = percent_rank(avg_PIE)) %>%
+  mutate(hype_score = follower_pct - PIE_pct)
+
+ggplot(final_dataset, aes(x = follower_pct, y = PIE_pct, color = hype_score)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_hline(yintercept = 0.5, linetype = "dashed") +
+  geom_vline(xintercept = 0.5, linetype = "dashed") +
+  geom_text_repel(aes(label = athlete_display_name), size = 3) +
+  scale_color_gradient2(low = "#4575b4", mid = "grey", high = "#d73027",
+    midpoint = 0, name = "Hype Score") +
+  labs(
+    title = str_wrap("Popularity vs. Performance: Identifying Over-Hyped and Under-Recognized Players", 70),
+    x = "Instagram Popularity (Percentile)",
+    y = "On-Court Impact (PIE Percentile)",
+    color = "Hype Score") + 
+  theme_minimal()
+```
+
+Several of the players in the bottom right quadrant of the plot with positive hype scores, including Paige Bueckers, Angel Reese, Caitlin Clark, Cameron Brink, and Hailey Van Lith are young players who have played in the WNBA for two or less years.
+These athletes were also some of the most popular college players.
+Apart from Aliyah Boston, the players with negative hype scores are all veterans who have been in the league since before it began to grow in popularity.
+This suggests that where a player's college career falls on the timeline of women's basketball's growth has a greater bearing on their recognition and popularity than their performance in the league.
+
+## Conclusions
+
+Our exploration of team performance, individual performance, and player earnings and recognition has provided valuable insights into the factors that contributed to the the success of teams and players during the 2025 WNBA season.
+We found that the abilities of a team to outscore and play cleaner basketball than their opponents are strong determinants of their success.
+Game outcomes can be predicted with reasonable accuracy based on a combination of positive metrics that increase the likelihood of winning such as shots made, rebounds, blocks, as well as negative metric including turnovers and fouls.
+The most successful teams also had some of the overall league's most impactful players, which can be determined using the comprehensive Player Impact Estimate (PIE) metric.
+We found that the relationship between player performance and earnings and recognition is complicated.
+Typically, only players who have been in the league for many years experience salary increases with stronger performance.
+However, these veteran players may actually be making less overall than their younger, less experienced counterparts.
+Individual brand deals are becoming increasingly more lucrative.
+Because popularity is a primary factor in securing brand deals, many of the league's younger players who have developed under the growing spotlight on women's basketball and benefited from Name, Image, and Likeness (NIL) deals in college, are having better success tracking down endorsements in the WNBA.
+This discrepancy in earnings underscores the importance of player demands for a larger share of league revenues and more equitable compensation.
+
+![](figures/pay_players.png){fig-align="center"}
+
+<center>Minnesota Lynx player, Napheesa Collier, has been a key voice in league negotiations for more equitable compensation ([reddit](https://www.reddit.com/r/wnba/comments/1m5qgzy/pay_us_what_you_owe_us_so_what_will_the_wnba_owe/)).</center>
+
+## Limitations and Future Work
+
+The Wehoops datasets were clean, and they had ample information that captured the complexity of explaining basketball performance.
+One limitation is that we were only given data for the 2025 season making it difficult to draw general conclusions about what success in basketball really means for teams and across players’ careers.
+Another limitation is that salary alone does not capture how much a player makes from their career, as brand deals are a common way that players create income.
+These means of income are often correlated with a player’s popularity.
+Measuring popularity is also a difficult process on its own.
+In our report, we do this using the number of Instagram followers a player has, however, this poses another limitation as followers are not the only thing that represents popularity.
+
+In the future, it would be ideal to look at and compare multiple seasons.
+It also would be interesting to look at what different players’ and teams’ general playing styles are, and how that can impact their success.
+Factors such as the speed at which a team plays, how often they rotate players in and out, what sort of plays they run, and other factors that are not as easily quantified.
+
+Also, we found that there are many aspects other than performance that can affect popularity and salary, such as the type of contract and overall changes of popularity of the sport at different points in each player’s career.
+Additionally, the player performance vs. popularity percentile plot revealed some interesting grouping.
+Most of the players in the bottom right quadrant, who we concluded are receiving more recognition than is “deserved” based on PIE alone, are younger and white.
+On the other hand, the players in the top left quadrant, who we identified as under-rated based on PIE and followers, are mostly older and black.
+This drove us to consider a question that went beyond the scope of our current project, but nonetheless is very interesting: Are there any confounding social factors, such as race, conventional beauty standards, controversy, political opinions, and sexuality, that impact popularity and pay?
+Overall, while our report is a comprehensive review of the 2025 season, measuring performance and success in many aspects, there is so much more to explore with this topic.
+
+## Presentation Recording and Slides
+
+{{< video WNBAPerformance.mp4 >}}
+
+<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vQfVAO3-2c9-LpSevVm4AELo_SMsz96CF2Uz2sqIM5PjQ4-WBb-4oTy0zrtWJjX4t314fgLDK97xRZR/pubembed?start=false&loop=false&delayms=10000" frameborder="0" width="480" height="299" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
