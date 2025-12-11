@@ -59,7 +59,7 @@ I made running counts of each teams wins and losses so that their records could 
 ```{r}
 # determine records for each team
 wnba_team_records <- wnba_team_box %>%
-  filter(team_name != "TEAM CLARK", team_name != "TEAM COLLIER") %>% # remove All Star teams
+  filter(game_id != 401781604) %>%
   mutate(
     win = ifelse(team_winner == TRUE, 1, 0),
     loss = ifelse(team_winner == FALSE, 1, 0)
@@ -130,7 +130,7 @@ margins <- wnba_team_records %>%
     foul_margin = fouls - rev(fouls)
   ) %>%
   ungroup() %>%
-  select(game_id, team_name, field_margin, free_margin, three_margin, turnover_margin, foul_margin) %>%
+  select(game_id, team_name, field_margin, free_margin, three_margin, turnover_margin, foul_margin, cumulative_wins) %>%
   arrange(game_id) 
 
 # calculate average margins by team
@@ -141,7 +141,8 @@ margin_avgs <- margins %>%
     avg_free_margin = mean(free_margin),
     avg_three_margin = mean(three_margin),
     avg_turnover_margin = mean(turnover_margin),
-    avg_foul_margin = mean(foul_margin)
+    avg_foul_margin = mean(foul_margin),
+    cumulative_wins = max(cumulative_wins)
   ) 
 
 margin_avgs_pivoted <- margin_avgs %>%
@@ -152,6 +153,9 @@ margin_avgs_pivoted <- margin_avgs %>%
   ) %>%
   mutate(
     margin_type = fct_relevel(margin_type, "avg_field_margin", "avg_free_margin", "avg_three_margin", "avg_turnover_margin", "avg_foul_margin")
+  ) %>%
+  mutate(
+    team_name = fct_reorder(team_name, desc(cumulative_wins))
   )
 
 margin_avgs %>%
@@ -226,7 +230,7 @@ wnba_pbp %>%
   filter(game_id != 401781604) %>% #filter out All Star game
   ggplot(aes(y = shot_type, fill = scoring_play)) +
   geom_bar() +
-  theme_classic()
+  theme_classic() +
+  labs(x = "count", y = "shot type", fill = "scoring play")
 ```
 Jumpshots are by far the most common shot, but they are not the easiest to make. Free throws and layups, which make up the majority of the rest of shots, are easier to make.
-
